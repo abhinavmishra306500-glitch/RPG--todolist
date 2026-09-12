@@ -146,3 +146,124 @@ export const playQuestCompleteSound = () => {
   }
 };
 
+/**
+ * Triumphant Streak Milestone Fanfare (approx 1.0s).
+ * Ascending retro milestone fanfare (F4 -> A4 -> C5 -> F5 -> A5).
+ */
+export const playStreakMilestoneSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 349.23, time: 0, duration: 0.14 },    // F4
+      { freq: 440.00, time: 0.12, duration: 0.14 }, // A4
+      { freq: 523.25, time: 0.24, duration: 0.14 }, // C5
+      { freq: 698.46, time: 0.38, duration: 0.22 }, // F5
+      { freq: 880.00, time: 0.55, duration: 0.45 }, // A5 (sustained peak)
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + time);
+
+      gain.gain.setValueAtTime(0.001, now + time);
+      gain.gain.linearRampToValueAtTime(0.18, now + time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + time);
+      osc.stop(now + time + duration + 0.02);
+    });
+  } catch {
+    // Graceful fallback
+  }
+};
+
+/**
+ * Triumphant Royal League Promotion Fanfare (approx 1.2s).
+ * Ascending royal brass fanfare: C4 -> E4 -> G4 -> C5 -> E5 -> G5.
+ */
+export const playLeaguePromotedSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 261.63, time: 0, duration: 0.12 },    // C4
+      { freq: 329.63, time: 0.10, duration: 0.12 }, // E4
+      { freq: 392.00, time: 0.20, duration: 0.14 }, // G4
+      { freq: 523.25, time: 0.32, duration: 0.14 }, // C5
+      { freq: 659.25, time: 0.44, duration: 0.20 }, // E5
+      { freq: 783.99, time: 0.62, duration: 0.55 }, // G5 (sustained glorious chord)
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now + time);
+
+      gain.gain.setValueAtTime(0.001, now + time);
+      gain.gain.linearRampToValueAtTime(0.16, now + time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + time);
+      osc.stop(now + time + duration + 0.02);
+    });
+  } catch {
+    // Graceful fallback
+  }
+};
+
+/**
+ * Retro League Demotion Warning Sound (approx 0.6s).
+ * Descending somber retro notes: G4 -> F4 -> Eb4 -> C4.
+ */
+export const playLeagueDemotedSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 392.00, time: 0, duration: 0.14 },    // G4
+      { freq: 349.23, time: 0.12, duration: 0.14 }, // F4
+      { freq: 311.13, time: 0.24, duration: 0.16 }, // Eb4
+      { freq: 261.63, time: 0.38, duration: 0.30 }, // C4
+    ];
+
+    notes.forEach(({ freq, time, duration }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, now + time);
+
+      gain.gain.setValueAtTime(0.001, now + time);
+      gain.gain.linearRampToValueAtTime(0.12, now + time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + time);
+      osc.stop(now + time + duration + 0.02);
+    });
+  } catch {
+    // Graceful fallback
+  }
+};
+
+

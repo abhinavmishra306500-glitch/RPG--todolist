@@ -1,5 +1,5 @@
 import type { CharacterProfile } from '../types/character';
-import type { PlayerState, PlayerStats, LeagueTier } from '../types/progression';
+import type { PlayerState, PlayerStats, LeagueTier, PlayerLeague } from '../types/progression';
 
 export const MAX_PLAYER_LEVEL = 100;
 
@@ -50,6 +50,8 @@ export const createInitialPlayerState = (character: CharacterProfile): PlayerSta
       streak: 0,
     },
     league: {
+      tier: 'Bronze',
+      division: 'III',
       name: 'Bronze',
     },
   };
@@ -140,9 +142,6 @@ export const addPlayerXp = (
   };
 };
 
-/**
- * Modifies player health, clamping between 0 and 100.
- */
 export const modifyPlayerHealth = (player: PlayerState, delta: number): PlayerState => {
   const newHealth = Math.min(100, Math.max(0, player.stats.health + delta));
   return {
@@ -150,6 +149,10 @@ export const modifyPlayerHealth = (player: PlayerState, delta: number): PlayerSt
     stats: {
       ...player.stats,
       health: newHealth,
+    },
+    consistency: {
+      ...player.consistency,
+      levelDecayProcessed: newHealth > 0 ? false : player.consistency?.levelDecayProcessed,
     },
   };
 };
@@ -220,11 +223,23 @@ export const resetPlayerStreak = (player: PlayerState): PlayerState => {
 /**
  * Updates player league tier.
  */
-export const updatePlayerLeague = (player: PlayerState, leagueName: LeagueTier): PlayerState => {
+export const updatePlayerLeague = (player: PlayerState, league: PlayerLeague | LeagueTier): PlayerState => {
+  if (typeof league === 'string') {
+    return {
+      ...player,
+      league: {
+        tier: league,
+        division: league === 'Mythical' ? undefined : 'III',
+        name: league,
+      },
+    };
+  }
   return {
     ...player,
     league: {
-      name: leagueName,
+      tier: league.tier,
+      division: league.tier === 'Mythical' ? undefined : (league.division || 'III'),
+      name: league.tier,
     },
   };
 };

@@ -1,33 +1,124 @@
 import React from 'react';
 import type { CharacterProfile } from '../../types/character';
+import type { PlayerLeague } from '../../types/progression';
 import {
   SKIN_TONES,
   HAIR_COLORS,
   OUTFIT_COLORS,
 } from '../../types/character';
 import { PixelSparkle } from '../common/PixelIcons';
+import { LeagueShieldSvg, getShieldMetadata } from './LeagueShield';
 
 interface CharacterPreviewProps {
   profile: CharacterProfile;
+  league?: Partial<PlayerLeague> | null;
   size?: 'md' | 'lg';
+  showShieldBadge?: boolean;
+  isAuraActive?: boolean;
 }
 
 export const CharacterPreview: React.FC<CharacterPreviewProps> = ({
   profile,
+  league,
   size = 'lg',
+  showShieldBadge = true,
+  isAuraActive = false,
 }) => {
   const skin = SKIN_TONES.find((s) => s.id === profile.skinToneId) || SKIN_TONES[0];
   const hair = HAIR_COLORS.find((h) => h.id === profile.hairColorId) || HAIR_COLORS[0];
   const outfit = OUTFIT_COLORS.find((o) => o.id === profile.outfitColorId) || OUTFIT_COLORS[0];
+  const shieldMeta = showShieldBadge ? getShieldMetadata(league) : null;
+  const tier = league?.tier || 'Bronze';
 
   const dimensions = size === 'lg' ? 'w-56 h-68 sm:w-64 sm:h-76' : 'w-40 h-48 sm:w-48 sm:h-56';
 
+  // League-specific aura color configuration
+  const auraConfig = (() => {
+    switch (tier) {
+      case 'Silver':
+        return {
+          glow: 'rgba(56, 189, 248, 0.9)',
+          ringBorder: 'border-cyan-300',
+          bgGradient: 'from-cyan-500/60 via-sky-400/30 to-transparent',
+          rayColor: '#38bdf8',
+          moteColor: 'text-cyan-200',
+        };
+      case 'Gold':
+        return {
+          glow: 'rgba(234, 179, 8, 0.95)',
+          ringBorder: 'border-yellow-300',
+          bgGradient: 'from-yellow-500/70 via-amber-400/40 to-transparent',
+          rayColor: '#fde047',
+          moteColor: 'text-yellow-200',
+        };
+      case 'Diamond':
+        return {
+          glow: 'rgba(6, 182, 212, 0.95)',
+          ringBorder: 'border-cyan-400',
+          bgGradient: 'from-cyan-400/70 via-teal-300/40 to-transparent',
+          rayColor: '#67e8f9',
+          moteColor: 'text-cyan-100',
+        };
+      case 'Mythical':
+        return {
+          glow: 'rgba(168, 85, 247, 0.95)',
+          ringBorder: 'border-fuchsia-400',
+          bgGradient: 'from-purple-600/80 via-fuchsia-500/40 to-transparent',
+          rayColor: '#e879f9',
+          moteColor: 'text-purple-200',
+        };
+      default: // Bronze
+        return {
+          glow: 'rgba(245, 158, 11, 0.9)',
+          ringBorder: 'border-amber-400',
+          bgGradient: 'from-amber-600/70 via-yellow-500/40 to-transparent',
+          rayColor: '#f59e0b',
+          moteColor: 'text-amber-300',
+        };
+    }
+  })();
+
   return (
     <div className="relative flex flex-col items-center justify-center select-none">
+      {/* --- 2-3 SEC RADIANT LEAGUE UP AURA BURST --- */}
+      {isAuraActive && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+          {/* Main Expanding Energy Orb */}
+          <div
+            className={`absolute w-56 h-56 rounded-full bg-gradient-to-r ${auraConfig.bgGradient} filter blur-xl animate-league-aura-burst`}
+            style={{ boxShadow: `0 0 50px ${auraConfig.glow}` }}
+          />
+
+          {/* Secondary Concentric Shockwave Rings */}
+          <div
+            className={`absolute w-44 h-44 rounded-full border-2 ${auraConfig.ringBorder} animate-league-shockwave`}
+            style={{ boxShadow: `0 0 20px ${auraConfig.glow}` }}
+          />
+          <div
+            className={`absolute w-36 h-36 rounded-full border ${auraConfig.ringBorder} animate-league-shockwave`}
+            style={{ animationDelay: '0.4s', boxShadow: `0 0 15px ${auraConfig.glow}` }}
+          />
+
+          {/* Rising Starlight Energy Particles / Motes */}
+          <div className={`absolute top-1/2 left-6 ${auraConfig.moteColor} animate-league-mote`}>
+            <PixelSparkle size={16} />
+          </div>
+          <div className={`absolute top-1/2 right-6 ${auraConfig.moteColor} animate-league-mote`} style={{ animationDelay: '0.3s' }}>
+            <PixelSparkle size={18} />
+          </div>
+          <div className={`absolute top-1/3 left-10 ${auraConfig.moteColor} animate-league-mote`} style={{ animationDelay: '0.6s' }}>
+            <PixelSparkle size={14} />
+          </div>
+          <div className={`absolute top-1/3 right-10 ${auraConfig.moteColor} animate-league-mote`} style={{ animationDelay: '0.8s' }}>
+            <PixelSparkle size={16} />
+          </div>
+        </div>
+      )}
+
       {/* Ambient background aura glow */}
       <div
         className="absolute w-44 h-44 rounded-full filter blur-2xl opacity-35 transition-colors duration-500 pointer-events-none"
-        style={{ backgroundColor: outfit.primaryHex }}
+        style={{ backgroundColor: isAuraActive ? auraConfig.glow : outfit.primaryHex }}
       />
 
       {/* Floating Sparkles around character */}
@@ -342,6 +433,9 @@ export const CharacterPreview: React.FC<CharacterPreviewProps> = ({
               <circle cx="48" cy="22" r="2" fill={hair.highlightHex} />
             </g>
           )}
+
+          {/* --- LEAGUE SHIELD ATTACHED TO CHARACTER HAND --- */}
+          <LeagueShieldSvg league={league} />
         </svg>
       </div>
 
@@ -357,6 +451,15 @@ export const CharacterPreview: React.FC<CharacterPreviewProps> = ({
           <p className="text-[10px] text-slate-400 font-sans capitalize mt-0.5 truncate w-full text-center block">
             {profile.gender} • {profile.outfitStyleId}
           </p>
+          {shieldMeta && (
+            <div
+              className="mt-1 flex items-center justify-center gap-1 text-[9px] font-pixel text-amber-300/90 border-t border-[#2e2848] pt-1 w-full truncate"
+              title={`${shieldMeta.name}: ${shieldMeta.description}`}
+            >
+              <span>🛡️</span>
+              <span className="truncate">{shieldMeta.name}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

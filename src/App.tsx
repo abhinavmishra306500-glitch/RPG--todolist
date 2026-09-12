@@ -21,6 +21,11 @@ import { QuestRewardModal } from './components/quest/QuestRewardModal';
 import { RpgCard } from './components/ui/RpgCard';
 import { PixelHeart, PixelSword, PixelWrench } from './components/common/PixelIcons';
 import { RpgOverworldBackground } from './components/environment/RpgOverworldBackground';
+import { StreakMilestoneModal } from './components/character/StreakMilestoneModal';
+import { LeagueChangeModal } from './components/character/LeagueChangeModal';
+import { getTodayDateString, applyInactivityDecay, recordDailyActivity } from './utils/streakDecay';
+import { normalizeLeague } from './utils/league';
+import type { PlayerLeague } from './types/progression';
 
 const PLAYER_STORAGE_KEY = 'LIFE_RPG_PLAYER_STATE';
 
@@ -28,7 +33,10 @@ const loadSavedPlayerState = (): PlayerState | null => {
   try {
     const saved = localStorage.getItem(PLAYER_STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed: PlayerState = JSON.parse(saved);
+      parsed.league = normalizeLeague(parsed.league);
+      const { updatedPlayer } = applyInactivityDecay(parsed, getTodayDateString());
+      return updatedPlayer;
     }
   } catch (e) {
     console.error('Failed to load player state from localStorage', e);
@@ -54,6 +62,41 @@ export const App: React.FC = () => {
     leveledUp: boolean;
     newLevel: number;
   } | null>(null);
+  const [activeMilestone, setActiveMilestone] = useState<{
+    milestone: number;
+    streak: number;
+  } | null>(null);
+  const [pendingMilestone, setPendingMilestone] = useState<{
+    milestone: number;
+    streak: number;
+  } | null>(null);
+  const [activeLeagueModal, setActiveLeagueModal] = useState<{
+    type: 'promoted' | 'demoted';
+    oldLeague: PlayerLeague;
+    newLeague: PlayerLeague;
+  } | null>(null);
+  const [pendingLeagueModal, setPendingLeagueModal] = useState<{
+    type: 'promoted' | 'demoted';
+    oldLeague: PlayerLeague;
+    newLeague: PlayerLeague;
+  } | null>(null);
+
+  // Apply daily decay on mount if player state is present
+  useEffect(() => {
+    if (playerState) {
+      const { updatedPlayer, healthLost, leagueDemoted } = applyInactivityDecay(playerState, getTodayDateString());
+      if (healthLost > 0 || updatedPlayer !== playerState) {
+        setPlayerState(updatedPlayer);
+      }
+      if (leagueDemoted) {
+        setActiveLeagueModal({
+          type: 'demoted',
+          oldLeague: leagueDemoted.oldLeague,
+          newLeague: leagueDemoted.newLeague,
+        });
+      }
+    }
+  }, []);
 
   // Sync quests to localStorage whenever updated
   useEffect(() => {
@@ -155,7 +198,11 @@ export const App: React.FC = () => {
       const currentLevel = playerState?.progression.level || 1;
       const reward = calculateQuestReward(questToToggle, currentLevel);
       const activePlayer = playerState || createInitialPlayerState(characterProfile || DEFAULT_CHARACTER);
-      const { updatedPlayer, leveledUp } = applyQuestRewardToPlayer(activePlayer, reward);
+      const { updatedPlayer: rewardPlayer, leveledUp } = applyQuestRewardToPlayer(activePlayer, reward);
+
+      // Record daily consistency activity, streak milestones & league progression
+      const todayStr = getTodayDateString();
+      const { updatedPlayer, milestoneUnlocked, leaguePromoted } = recordDailyActivity(rewardPlayer, todayStr);
 
       setPlayerState(updatedPlayer);
 
@@ -179,6 +226,21 @@ export const App: React.FC = () => {
         leveledUp,
         newLevel: updatedPlayer.progression.level,
       });
+
+      if (milestoneUnlocked !== null) {
+        setPendingMilestone({
+          milestone: milestoneUnlocked,
+          streak: updatedPlayer.consistency.streak,
+        });
+      }
+
+      if (leaguePromoted !== null) {
+        setPendingLeagueModal({
+          type: 'promoted',
+          oldLeague: leaguePromoted.oldLeague,
+          newLeague: leaguePromoted.newLeague,
+        });
+      }
     } else if (!questToToggle.completed && questToToggle.rewardClaimed) {
       // Case 2: Already claimed quest being marked completed (duplicate reward protection)
       setQuests((prev) =>
@@ -245,6 +307,7 @@ export const App: React.FC = () => {
           onEditCharacter={handleEditCharacter}
           onContinueToQuests={() => setScreen('quest_page')}
           onLogOut={handleLogOut}
+          onUpdatePlayer={setPlayerState}
           isDevMode={currentRole === 'developer' || activeSession?.role === 'developer'}
         />
       )}
@@ -369,10 +432,10 @@ export const App: React.FC = () => {
       {/* Semantic Accessible Footer */}
       <footer className="w-full text-center mt-6 text-xs text-slate-200 relative z-10 select-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
         <p className="font-pixel text-[9px] text-slate-900 tracking-wider font-bold">
-          Life RPG • Step 6: Attributes + XP + Level Progression
+          Life RPG • Step 8: League System (Bronze III → Mythical)
         </p>
         <p className="text-[10px] text-slate-800 font-medium mt-1">
-          Non-linear scaling, level-diminishing XP returns, and Level 100 mastery.
+          13 League ranks based on consistency, promotion/demotion feedback, completely separate from Level/XP.
         </p>
       </footer>
 
@@ -386,11 +449,43 @@ export const App: React.FC = () => {
       {/* --- QUEST REWARD MODAL (STEP 5) --- */}
       <QuestRewardModal
         isOpen={Boolean(activeReward)}
-        onClose={() => setActiveReward(null)}
+        onClose={() => {
+          setActiveReward(null);
+          if (pendingMilestone) {
+            setActiveMilestone(pendingMilestone);
+            setPendingMilestone(null);
+          } else if (pendingLeagueModal) {
+            setActiveLeagueModal(pendingLeagueModal);
+            setPendingLeagueModal(null);
+          }
+        }}
         questTitle={activeReward?.questTitle || ''}
         reward={activeReward?.reward || null}
         leveledUp={Boolean(activeReward?.leveledUp)}
         newLevel={activeReward?.newLevel || 1}
+      />
+
+      {/* --- STREAK MILESTONE MODAL (STEP 7) --- */}
+      <StreakMilestoneModal
+        isOpen={Boolean(activeMilestone)}
+        onClose={() => {
+          setActiveMilestone(null);
+          if (pendingLeagueModal) {
+            setActiveLeagueModal(pendingLeagueModal);
+            setPendingLeagueModal(null);
+          }
+        }}
+        milestone={activeMilestone?.milestone || 1}
+        currentStreak={activeMilestone?.streak || 1}
+      />
+
+      {/* --- LEAGUE PROMOTION / DEMOTION MODAL (STEP 8) --- */}
+      <LeagueChangeModal
+        isOpen={Boolean(activeLeagueModal)}
+        onClose={() => setActiveLeagueModal(null)}
+        type={activeLeagueModal?.type || 'promoted'}
+        oldLeague={activeLeagueModal?.oldLeague || { tier: 'Bronze', division: 'III' }}
+        newLeague={activeLeagueModal?.newLeague || { tier: 'Bronze', division: 'III' }}
       />
     </div>
   );

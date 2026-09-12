@@ -1,6 +1,7 @@
 import type { CharacterProfile } from './character';
 
 export type LeagueTier = 'Bronze' | 'Silver' | 'Gold' | 'Diamond' | 'Mythical';
+export type LeagueDivision = 'III' | 'II' | 'I';
 
 export interface PlayerProgression {
   level: number; // Starts at 1, cannot go below 1
@@ -20,11 +21,17 @@ export interface PlayerEconomy {
 }
 
 export interface PlayerConsistency {
-  streak: number;       // Starts at 0
+  streak: number; // Starts at 0
+  lastActiveDate?: string; // YYYY-MM-DD of last completed quest
+  lastHealthDecayDate?: string; // YYYY-MM-DD of last decay check
+  levelDecayProcessed?: boolean; // Protects against repeated level decay when HP is 0
+  unlockedMilestones?: number[]; // [1, 3, 7, 14, 30, 100]
 }
 
 export interface PlayerLeague {
-  name: LeagueTier;     // Starts at 'Bronze'
+  tier: LeagueTier; // Starts at 'Bronze'
+  division?: LeagueDivision; // 'III' | 'II' | 'I' (undefined for Mythical)
+  name?: LeagueTier; // Optional backwards-compatible property
 }
 
 export interface PlayerState {
