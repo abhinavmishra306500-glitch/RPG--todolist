@@ -5,6 +5,8 @@ import type { PlayerState } from './types/progression';
 import type { Quest } from './types/quest';
 import { loadQuestsWithDailyRefresh, saveQuestsToStorage } from './utils/questStorage';
 import { createInitialPlayerState } from './utils/progression';
+import { calculateQuestReward, applyQuestRewardToPlayer } from './utils/questRewards';
+import type { QuestReward } from './utils/questRewards';
 import { DEFAULT_CHARACTER } from './types/character';
 import { RoleSelector } from './components/auth/RoleSelector';
 import { PlayerLoginForm } from './components/auth/PlayerLoginForm';
@@ -15,9 +17,24 @@ import { CharacterCreatedSuccess } from './components/character/CharacterCreated
 import { CharacterStatsPanel } from './components/character/CharacterStatsPanel';
 import { QuestPage } from './components/quest/QuestPage';
 import { AddQuestModal } from './components/quest/AddQuestModal';
+import { QuestRewardModal } from './components/quest/QuestRewardModal';
 import { RpgCard } from './components/ui/RpgCard';
 import { PixelHeart, PixelSword, PixelWrench } from './components/common/PixelIcons';
 import { RpgOverworldBackground } from './components/environment/RpgOverworldBackground';
+
+const PLAYER_STORAGE_KEY = 'LIFE_RPG_PLAYER_STATE';
+
+const loadSavedPlayerState = (): PlayerState | null => {
+  try {
+    const saved = localStorage.getItem(PLAYER_STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Failed to load player state from localStorage', e);
+  }
+  return null;
+};
 
 type AppScreen = 'login' | 'character_creation' | 'character_created' | 'character_stats' | 'quest_page';
 
@@ -27,15 +44,32 @@ export const App: React.FC = () => {
   const [activeSession, setActiveSession] = useState<AuthMockSession | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [characterProfile, setCharacterProfile] = useState<CharacterProfile | null>(null);
-  const [playerState, setPlayerState] = useState<PlayerState | null>(null);
+  const [playerState, setPlayerState] = useState<PlayerState | null>(() => loadSavedPlayerState());
   const [playerName, setPlayerName] = useState('');
   const [quests, setQuests] = useState<Quest[]>(() => loadQuestsWithDailyRefresh());
   const [isAddQuestOpen, setIsAddQuestOpen] = useState(false);
+  const [activeReward, setActiveReward] = useState<{
+    questTitle: string;
+    reward: QuestReward;
+    leveledUp: boolean;
+    newLevel: number;
+  } | null>(null);
 
   // Sync quests to localStorage whenever updated
   useEffect(() => {
     saveQuestsToStorage(quests);
   }, [quests]);
+
+  // Sync playerState to localStorage whenever updated
+  useEffect(() => {
+    if (playerState) {
+      try {
+        localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(playerState));
+      } catch (e) {
+        console.error('Failed to save player state to localStorage', e);
+      }
+    }
+  }, [playerState]);
 
   const handleRoleChange = (newRole: UserRole) => {
     setCurrentRole(newRole);
@@ -113,9 +147,65 @@ export const App: React.FC = () => {
   };
 
   const handleToggleQuest = (id: string) => {
-    setQuests((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, completed: !q.completed } : q))
-    );
+    const questToToggle = quests.find((q) => q.id === id);
+    if (!questToToggle) return;
+
+    // Case 1: First time completion -> Award XP, Gold, Attribute / Skill XP with progression checks
+    if (!questToToggle.completed && !questToToggle.rewardClaimed) {
+      const reward = calculateQuestReward(questToToggle);
+      const activePlayer = playerState || createInitialPlayerState(characterProfile || DEFAULT_CHARACTER);
+      const { updatedPlayer, leveledUp } = applyQuestRewardToPlayer(activePlayer, reward);
+
+      setPlayerState(updatedPlayer);
+
+      setQuests((prev) =>
+        prev.map((q) =>
+          q.id === id
+            ? {
+                ...q,
+                completed: true,
+                rewardClaimed: true,
+                completedAt: Date.now(),
+                status: 'completed',
+              }
+            : q
+        )
+      );
+
+      setActiveReward({
+        questTitle: questToToggle.title,
+        reward,
+        leveledUp,
+        newLevel: updatedPlayer.progression.level,
+      });
+    } else if (!questToToggle.completed && questToToggle.rewardClaimed) {
+      // Case 2: Already claimed quest being marked completed (duplicate reward protection)
+      setQuests((prev) =>
+        prev.map((q) =>
+          q.id === id
+            ? {
+                ...q,
+                completed: true,
+                completedAt: Date.now(),
+                status: 'completed',
+              }
+            : q
+        )
+      );
+    } else {
+      // Case 3: Reopen / reactivate quest (rewardClaimed stays true to prevent re-farming)
+      setQuests((prev) =>
+        prev.map((q) =>
+          q.id === id
+            ? {
+                ...q,
+                completed: false,
+                status: 'active',
+              }
+            : q
+        )
+      );
+    }
   };
 
   return (
@@ -273,10 +363,10 @@ export const App: React.FC = () => {
       {/* Semantic Accessible Footer */}
       <footer className="w-full text-center mt-6 text-xs text-slate-200 relative z-10 select-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
         <p className="font-pixel text-[9px] text-slate-900 tracking-wider font-bold">
-          Life RPG • Step 4: Quest System Layer
+          Life RPG • Step 5: Quest Completion Rewards & Progression
         </p>
         <p className="text-[10px] text-slate-800 font-medium mt-1">
-          Frontend only. Quest reward XP/gold attribution & world maps will connect in subsequent layers.
+          Complete quests to earn XP, Gold, Attribute bonuses, and Skill XP with level progression.
         </p>
       </footer>
 
@@ -285,6 +375,16 @@ export const App: React.FC = () => {
         isOpen={isAddQuestOpen}
         onClose={() => setIsAddQuestOpen(false)}
         onAddQuest={handleAddQuest}
+      />
+
+      {/* --- QUEST REWARD MODAL (STEP 5) --- */}
+      <QuestRewardModal
+        isOpen={Boolean(activeReward)}
+        onClose={() => setActiveReward(null)}
+        questTitle={activeReward?.questTitle || ''}
+        reward={activeReward?.reward || null}
+        leveledUp={Boolean(activeReward?.leveledUp)}
+        newLevel={activeReward?.newLevel || 1}
       />
     </div>
   );

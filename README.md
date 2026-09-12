@@ -82,9 +82,40 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
   - Emerald pulse celebration animation (`animate-stat-pulse`).
   - Triumphant 4-note ascending quest clear chime via Web Audio API (`playQuestCompleteSound`).
   - Option to reactivate quests.
-  - **Strict Step 4 Boundary**: Marking quests complete does not award XP/gold yet (reserved for upcoming reward layer).
 - **Daily Calendar Refresh & LocalStorage Persistence (`questStorage.ts`)**:
   - Date-based tracking (`YYYY-MM-DD`). Automatically handles day rollovers even if browser is closed and reopened the next day.
+
+### ✅ Step 5: Quest Completion Rewards & Progression
+- **Exact Structured Reward Matrix**:
+  - **Today's Quests (Short-term daily tasks)**:
+    - `Easy`: ⭐ **+50 XP** | 📊 **+2 Attribute / Skill XP** | 💰 **+10 Gold**
+    - `Medium`: ⭐ **+100 XP** | 📊 **+5 Attribute / Skill XP** | 💰 **+20 Gold**
+    - `Hard`: ⭐ **+200 XP** | 📊 **+10 Attribute / Skill XP** | 💰 **+40 Gold**
+  - **Active Quests (Multi-day campaigns)**:
+    - `Easy`: ⭐ **+300 XP** | 📊 **+10 Attribute / Skill XP** | 💰 **+75 Gold**
+    - `Medium`: ⭐ **+600 XP** | 📊 **+20 Attribute / Skill XP** | 💰 **+150 Gold**
+    - `Hard`: ⭐ **+1000 XP** | 📊 **+35 Attribute / Skill XP** | 💰 **+300 Gold**
+- **Attribute & Skill XP Separation**:
+  - 🧠 `Intelligence` ➔ Intelligence stat
+  - 💪 `Strength` ➔ Strength stat
+  - 🏃 `Stamina` ➔ Stamina stat
+  - 🛠 `Skills` ➔ 🛠 **Skill XP** (explicitly distinguished from overall character XP; overall XP controls character Level)
+  - ❤️ `Health` ➔ Health (max 100, clamped safely between 0–100, activates full-health heart pulse at 100 HP)
+- **Duplicate Reward Protection**:
+  - Strict once-per-quest reward granting tracked by `rewardClaimed`.
+  - Reopening or clicking completed quests cannot farm duplicate rewards.
+- **Live Reward Previews**:
+  - Every quest card features clear reward preview chips (e.g. `+100 XP`, `+20 G`, `+5 Intelligence`) indicating exact earned rewards.
+- **Staged Sequential Reward Modal (`QuestRewardModal.tsx`)**:
+  - Modal reveals rewards in cinematic stages:
+    1. Overall XP (+XP with icon)
+    2. Gold currency (+Gold with coin icon)
+    3. Attribute or Skill XP (+Amount with category icon)
+    4. Level Up celebration banner (if threshold reached) with audio fanfare
+  - "Claim & Continue" action button to smoothly proceed.
+- **Single Source of Truth & LocalStorage Persistence**:
+  - Updates directly apply to `PlayerState` (`LIFE_RPG_PLAYER_STATE`).
+  - Rollover XP algorithm allows continuous leveling without losing extra XP.
 
 ---
 

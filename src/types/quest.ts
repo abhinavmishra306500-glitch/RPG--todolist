@@ -19,6 +19,7 @@ export interface Quest {
   completed: boolean;
   completedAt?: number;
   status: QuestStatus;
+  rewardClaimed?: boolean; // Duplicate reward protection: guarantees rewards are claimed only once
 }
 
 export interface QuestCategoryConfig {

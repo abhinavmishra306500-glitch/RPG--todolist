@@ -20,7 +20,7 @@ import {
   Shield,
   Brain,
   Swords,
-  Target,
+  Wrench,
   Edit3,
   LogOut,
   Sparkles,
@@ -400,14 +400,14 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
                 </div>
               </div>
 
-              {/* Skills */}
+              {/* Skills / Skill XP */}
               <div className="p-2.5 bg-[#12101e] border-2 border-[#2b2545] hover:border-purple-500/50 transition-colors">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-6 h-6 bg-purple-950/60 border border-purple-500/40 flex items-center justify-center">
-                    <Target size={13} className="text-purple-400" />
+                    <Wrench size={13} className="text-purple-400" />
                   </div>
                   <span className="text-[9px] font-pixel text-slate-300 uppercase tracking-wider truncate">
-                    SKILLS
+                    SKILL XP
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between mt-1">

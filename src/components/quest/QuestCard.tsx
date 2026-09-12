@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import type { Quest } from '../../types/quest';
 import { QUEST_CATEGORIES, QUEST_DIFFICULTIES } from '../../types/quest';
+import { calculateQuestReward } from '../../utils/questRewards';
 import { formatRemainingTime } from '../../utils/questStorage';
 import { playQuestCompleteSound } from '../../utils/soundEffects';
-import { Check, Clock, AlertTriangle, Sparkles, RotateCcw } from 'lucide-react';
+import { Check, Clock, AlertTriangle, Sparkles, RotateCcw, Zap, Coins } from 'lucide-react';
 
 interface QuestCardProps {
   quest: Quest;
@@ -33,6 +34,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({
 
   const categoryConfig = QUEST_CATEGORIES[quest.category] || QUEST_CATEGORIES.intelligence;
   const difficultyConfig = QUEST_DIFFICULTIES[quest.difficulty] || QUEST_DIFFICULTIES.medium;
+  const reward = calculateQuestReward(quest);
 
   const isExpired = remainingText === 'EXPIRED';
 
@@ -61,7 +63,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Left: Category Icon, Quest Title, Badges & Countdown */}
+        {/* Left: Category Icon, Quest Title, Badges, Countdown & Rewards */}
         <div className="flex items-start gap-3 flex-1 min-w-0">
           {/* Category Icon Badge */}
           <div
@@ -90,6 +92,13 @@ export const QuestCard: React.FC<QuestCardProps> = ({
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-[9px] font-pixel">
                   <Check size={10} />
                   <span>COMPLETED</span>
+                </span>
+              )}
+
+              {quest.rewardClaimed && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-950/80 border border-amber-500/50 text-amber-300 text-[9px] font-pixel">
+                  <Sparkles size={10} className="text-amber-400" />
+                  <span>CLAIMED</span>
                 </span>
               )}
 
@@ -131,21 +140,42 @@ export const QuestCard: React.FC<QuestCardProps> = ({
                 <span>{remainingText}</span>
               </span>
             </div>
+
+            {/* Quest Completion Rewards Preview Chips */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-[9px] font-pixel">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-indigo-950/70 border border-indigo-500/40 text-indigo-300">
+                <Zap size={10} className="text-indigo-400" />
+                +{reward.xp} XP
+              </span>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-yellow-950/70 border border-yellow-500/40 text-yellow-300">
+                <Coins size={10} className="text-yellow-400" />
+                +{reward.gold} G
+              </span>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-950/70 border border-emerald-500/40 text-emerald-300">
+                <span>{reward.categoryIcon}</span>
+                +{reward.attributeAmount} {reward.attributeName}
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Right: Action Button */}
         <div className="shrink-0 flex items-center self-end sm:self-center">
           {quest.completed ? (
-            <button
-              type="button"
-              onClick={handleComplete}
-              className="px-3 py-1.5 bg-[#171424] border border-[#2f274a] text-slate-400 hover:text-amber-300 hover:border-amber-400 text-[10px] font-pixel transition-colors flex items-center gap-1.5 shadow-[1px_1px_0_0_#000]"
-              title="Click to reactivate quest"
-            >
-              <RotateCcw size={11} />
-              <span>Reactivate</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <span className="px-2.5 py-1.5 bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 text-[10px] font-pixel flex items-center gap-1 shadow-[1px_1px_0_0_#000]">
+                <Check size={12} className="stroke-[3]" />
+                <span>Claimed</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleComplete}
+                className="px-2 py-1.5 bg-[#171424] border border-[#2f274a] text-slate-500 hover:text-slate-300 text-[9px] font-pixel transition-colors flex items-center gap-1"
+                title="Reopen quest"
+              >
+                <RotateCcw size={10} />
+              </button>
+            </div>
           ) : (
             <button
               type="button"
