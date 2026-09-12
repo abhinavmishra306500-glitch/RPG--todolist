@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #72b988;
+    color: #f1f5f9;
+    overflow-x: hidden;
+  }
+}
+
+/* Overworld Grass Field Texture with pixel grass blades */
+.rpg-grass-field {
+  background-color: #76bd8c;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 60%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+}
+
+/* Pixel corners and retro border utilities for Login Box */
+.rpg-box {
+  position: relative;
+  background-color: #161424;
+  border: 3px solid #3b355a;
+  box-shadow: 
+    0 0 0 1px #110f1d,
+    6px 6px 0 0 rgba(0, 0, 0, 0.65);
+}
+
+.rpg-corner-decor::before,
+.rpg-corner-decor::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #facc15;
+}
+
+.rpg-corner-decor::before {
+  top: -3px;
+  left: -3px;
+}
+
+.rpg-corner-decor::after {
+  bottom: -3px;
+  right: -3px;
+}
+
+/* Pixel button tactile active state */
+.rpg-btn-active:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Animations for Overworld Environment */
+@keyframes idle-breathe {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-2px) scaleY(1.02);
+  }
+}
+
+@keyframes chimney-smoke-1 {
+  0% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(6px, -18px) scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes chimney-smoke-2 {
+  0% {
+    transform: translate(0, 0) scale(0.7);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(8px, -22px) scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes wind-sway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1.2deg);
+  }
+}
+
+@keyframes breeze-drift {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(140px, 80px) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+.animate-idle-breathe {
+  animation: idle-breathe 2.4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.animate-smoke-1 {
+  animation: chimney-smoke-1 2.8s ease-out infinite;
+}
+
+.animate-smoke-2 {
+  animation: chimney-smoke-2 2.8s ease-out infinite 1.4s;
+}
+
+.animate-tree-sway {
+  animation: wind-sway 4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.animate-breeze-drift {
+  animation: breeze-drift 8s linear infinite;
+}
+
+@keyframes pet-tail-wag {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-15deg);
+  }
+  75% {
+    transform: rotate(15deg);
+  }
+}
+
+@keyframes water-shimmer {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateX(3px);
+  }
+}
+
+.animate-pet-tail {
+  animation: pet-tail-wag 1.2s ease-in-out infinite;
+  transform-origin: bottom left;
+}
+
+.animate-water-shimmer-1 {
+  animation: water-shimmer 2.2s ease-in-out infinite;
+}
+
+.animate-water-shimmer-2 {
+  animation: water-shimmer 2.2s ease-in-out infinite 1.1s;
+}
