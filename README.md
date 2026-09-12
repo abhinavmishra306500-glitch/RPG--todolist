@@ -62,6 +62,30 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
     - **Stat Number Count-Up & Highlight**: Smooth integer animation and emerald card pulse on stat increases.
   - Clean, polished player-facing UI with seamless character editing and logout controls.
 
+### ✅ Step 4: Quest System
+- **Core Concept**: Real-world tasks modeled as RPG quests to progress the adventurer.
+- **Quest Data Model (`Quest`)**:
+  - `id`, `title`, `category`, `difficulty`, `deadline`, `completed`, `createdAt`.
+- **5 Core Categories** (determines future character attribute rewards):
+  - 🧠 `Intelligence` (Cyan)
+  - 💪 `Strength` (Red)
+  - 🏃 `Stamina` (Emerald)
+  - 🛠 `Skills` (Purple)
+  - ❤️ `Health` (Rose)
+- **3 Difficulty Tiers**: `Easy` (★☆☆), `Medium` (★★☆), `Hard` (★★★).
+- **Interactive Add Quest Modal (`AddQuestModal.tsx`)**:
+  - Opened via prominent **`+ ADD QUEST`** button.
+  - Form validation, category selector cards, difficulty cards, and a quick **"Today"** deadline selector.
+- **Quest Board & Filters (`QuestBoard.tsx`)**:
+  - Live filter tabs: **`All`**, **`Active`**, and **`Completed`** with count badges.
+  - Interactive Quest Cards (`QuestCard.tsx`) displaying title, category, difficulty, deadline, and completion status.
+- **Completion Feedback & Audio**:
+  - Strikethrough title with green `COMPLETED` tag.
+  - Green particle completion flash animation (`animate-stat-pulse`).
+  - Triumphant 4-note ascending quest complete jingle via Web Audio API (`playQuestCompleteSound`).
+  - Option to reactivate quests.
+  - Strict Step 4 scope: marking quests complete does not award XP/gold yet.
+
 ---
 
 ## 🛠️ Tech Stack

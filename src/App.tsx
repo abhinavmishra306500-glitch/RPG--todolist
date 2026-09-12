@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import type { UserRole, LoginFormData, AuthMockSession } from './types/auth';
 import type { CharacterProfile } from './types/character';
 import type { PlayerState } from './types/progression';
+import type { Quest } from './types/quest';
+import { INITIAL_QUESTS } from './types/quest';
 import { createInitialPlayerState } from './utils/progression';
 import { DEFAULT_CHARACTER } from './types/character';
 import { RoleSelector } from './components/auth/RoleSelector';
@@ -11,6 +13,8 @@ import { MockSessionNotice } from './components/auth/MockSessionNotice';
 import { CharacterCreationScreen } from './components/character/CharacterCreationScreen';
 import { CharacterCreatedSuccess } from './components/character/CharacterCreatedSuccess';
 import { CharacterStatsPanel } from './components/character/CharacterStatsPanel';
+import { QuestBoard } from './components/quest/QuestBoard';
+import { AddQuestModal } from './components/quest/AddQuestModal';
 import { RpgCard } from './components/ui/RpgCard';
 import { PixelHeart, PixelSword, PixelWrench } from './components/common/PixelIcons';
 import { RpgOverworldBackground } from './components/environment/RpgOverworldBackground';
@@ -25,6 +29,8 @@ export const App: React.FC = () => {
   const [characterProfile, setCharacterProfile] = useState<CharacterProfile | null>(null);
   const [playerState, setPlayerState] = useState<PlayerState | null>(null);
   const [playerName, setPlayerName] = useState('');
+  const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
+  const [isAddQuestOpen, setIsAddQuestOpen] = useState(false);
 
   const handleRoleChange = (newRole: UserRole) => {
     setCurrentRole(newRole);
@@ -97,6 +103,16 @@ export const App: React.FC = () => {
     setActiveSession(null);
   };
 
+  const handleAddQuest = (newQuest: Quest) => {
+    setQuests((prev) => [newQuest, ...prev]);
+  };
+
+  const handleToggleQuest = (id: string) => {
+    setQuests((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, completed: !q.completed } : q))
+    );
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col justify-between py-6 px-4 sm:px-6 relative overflow-hidden">
       {/* 2D Pixel-Art RPG Overworld Background Environment */}
@@ -122,14 +138,23 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* --- SCREEN 3: CHARACTER STATS & PROGRESSION PANEL (STEP 3) --- */}
+      {/* --- SCREEN 3: CHARACTER STATS & QUEST BOARD (STEP 3 & 4) --- */}
       {screen === 'character_stats' && playerState && (
-        <CharacterStatsPanel
-          initialPlayer={playerState}
-          onEditCharacter={handleEditCharacter}
-          onLogOut={handleLogOut}
-          isDevMode={currentRole === 'developer' || activeSession?.role === 'developer'}
-        />
+        <div className="w-full max-w-2xl mx-auto my-auto relative z-10 space-y-6">
+          <CharacterStatsPanel
+            initialPlayer={playerState}
+            onEditCharacter={handleEditCharacter}
+            onLogOut={handleLogOut}
+            isDevMode={currentRole === 'developer' || activeSession?.role === 'developer'}
+          />
+
+          {/* --- STEP 4: QUEST SYSTEM BOARD --- */}
+          <QuestBoard
+            quests={quests}
+            onAddQuestClick={() => setIsAddQuestOpen(true)}
+            onToggleComplete={handleToggleQuest}
+          />
+        </div>
       )}
 
       {/* --- SCREEN 3: LOGIN PAGE (Preserved 100%) --- */}
@@ -227,12 +252,19 @@ export const App: React.FC = () => {
       {/* Semantic Accessible Footer */}
       <footer className="w-full text-center mt-6 text-xs text-slate-200 relative z-10 select-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
         <p className="font-pixel text-[9px] text-slate-900 tracking-wider font-bold">
-          Life RPG • Step 3: Character Progression & Stats Layer
+          Life RPG • Step 4: Quest System Layer
         </p>
         <p className="text-[10px] text-slate-800 font-medium mt-1">
-          Frontend only. Server authentication, quests, and world maps will connect in subsequent layers.
+          Frontend only. Quest reward XP/gold attribution & world maps will connect in subsequent layers.
         </p>
       </footer>
+
+      {/* --- ADD QUEST MODAL (STEP 4) --- */}
+      <AddQuestModal
+        isOpen={isAddQuestOpen}
+        onClose={() => setIsAddQuestOpen(false)}
+        onAddQuest={handleAddQuest}
+      />
     </div>
   );
 };
