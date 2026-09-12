@@ -33,6 +33,10 @@ import {
   stopDiamondCityMusic,
   playDiamondNodeArriveSound,
   playDiamondStepSound,
+  startMythicalCastleMusic,
+  stopMythicalCastleMusic,
+  playMythicalNodeArriveSound,
+  playMythicalStepSound,
 } from '../../utils/soundEffects';
 import {
   ArrowLeft,
@@ -80,6 +84,7 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
       stopSilverVillageMusic();
       stopGoldCityMusic();
       stopDiamondCityMusic();
+      stopMythicalCastleMusic();
       return;
     }
 
@@ -87,27 +92,38 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
       stopSilverVillageMusic();
       stopGoldCityMusic();
       stopDiamondCityMusic();
+      stopMythicalCastleMusic();
       startForestAmbience(0.08);
     } else if (selectedWorld.id === 'silver-village') {
       stopForestAmbience();
       stopGoldCityMusic();
       stopDiamondCityMusic();
+      stopMythicalCastleMusic();
       startSilverVillageMusic(0.08);
     } else if (selectedWorld.id === 'gold-city') {
       stopForestAmbience();
       stopSilverVillageMusic();
       stopDiamondCityMusic();
+      stopMythicalCastleMusic();
       startGoldCityMusic(0.08);
     } else if (selectedWorld.id === 'diamond-city') {
       stopForestAmbience();
       stopSilverVillageMusic();
       stopGoldCityMusic();
+      stopMythicalCastleMusic();
       startDiamondCityMusic(0.08);
+    } else if (selectedWorld.id === 'mythical-castle') {
+      stopForestAmbience();
+      stopSilverVillageMusic();
+      stopGoldCityMusic();
+      stopDiamondCityMusic();
+      startMythicalCastleMusic(0.08);
     } else {
       stopForestAmbience();
       stopSilverVillageMusic();
       stopGoldCityMusic();
       stopDiamondCityMusic();
+      stopMythicalCastleMusic();
     }
 
     return () => {
@@ -115,6 +131,7 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
       stopSilverVillageMusic();
       stopGoldCityMusic();
       stopDiamondCityMusic();
+      stopMythicalCastleMusic();
     };
   }, [isSoundOn, selectedWorld.id]);
 
@@ -125,7 +142,9 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
   const handleArrival = useCallback(
     (targetLevel: number) => {
       const arrivedDef = getMapLevelDef(targetLevel);
-      if (arrivedDef.worldId === 'diamond-city') {
+      if (arrivedDef.worldId === 'mythical-castle') {
+        playMythicalNodeArriveSound();
+      } else if (arrivedDef.worldId === 'diamond-city') {
         playDiamondNodeArriveSound();
       } else if (arrivedDef.worldId === 'gold-city') {
         playGoldNodeArriveSound();
@@ -192,7 +211,9 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
         setSelectedWorld(getWorldById(nextDef.worldId));
       }
 
-      if (nextDef.worldId === 'diamond-city') {
+      if (nextDef.worldId === 'mythical-castle') {
+        playMythicalStepSound();
+      } else if (nextDef.worldId === 'diamond-city') {
         playDiamondStepSound();
       } else if (nextDef.worldId === 'gold-city') {
         playGoldStepSound();
@@ -232,7 +253,9 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
         setSelectedWorld(getWorldById(nextDef.worldId));
       }
 
-      if (nextDef.worldId === 'diamond-city') {
+      if (nextDef.worldId === 'mythical-castle') {
+        playMythicalNodeArriveSound();
+      } else if (nextDef.worldId === 'diamond-city') {
         playDiamondNodeArriveSound();
       } else if (nextDef.worldId === 'gold-city') {
         playGoldNodeArriveSound();
@@ -363,13 +386,17 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
             }`}
             title={
               isSoundOn
-                ? selectedWorld.id === 'diamond-city'
+                ? selectedWorld.id === 'mythical-castle'
+                  ? 'Mute Mythical Castle Epic Music & Cosmic Winds'
+                  : selectedWorld.id === 'diamond-city'
                   ? 'Mute Diamond City Ethereal Music & Waterfalls'
                   : selectedWorld.id === 'gold-city'
                   ? 'Mute Gold City Royal Music & Breeze'
                   : selectedWorld.id === 'silver-village'
                   ? 'Mute Silver Village Music & Stream'
                   : 'Mute Forest Sound'
+                : selectedWorld.id === 'mythical-castle'
+                ? 'Play Mythical Castle Epic Music & Cosmic Winds'
                 : selectedWorld.id === 'diamond-city'
                 ? 'Play Diamond City Ethereal Music & Waterfalls'
                 : selectedWorld.id === 'gold-city'

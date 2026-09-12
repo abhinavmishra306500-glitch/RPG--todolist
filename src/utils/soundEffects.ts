@@ -1586,4 +1586,454 @@ export const playDiamondPalaceSound = () => {
   }
 };
 
+/**
+ * ============================================================================
+ * 👑 WORLD 5: MYTHICAL CASTLE PROCEDURAL EPIC ENDGAME SOUNDTRACK & SFX
+ * ============================================================================
+ * 100% original, licensed-safe Web Audio API synthesis.
+ * Captures an epic, legendary, mysterious, grand, emotional, and powerful atmosphere:
+ * - Resonant Cathedral Pipe Organ & Ethereal Choral Pads (Dm9 -> Bbmaj7 -> Gm9 -> A7sus4 -> Dm)
+ * - Triumphant Symphonic Brass Melodic Fanfare Lines
+ * - Cascading Celestial Harp Flourishes & Stardust Glass Bells
+ * - High-Altitude Cosmic Winds & Thundering Floating Waterfalls Ambience
+ */
 
+let isMythicalMusicPlaying = false;
+let mythicalWindSource: AudioBufferSourceNode | null = null;
+let mythicalWindGain: GainNode | null = null;
+let mythicalMusicInterval: number | null = null;
+let mythicalPhraseIndex = 0;
+
+// Epic chord progressions for the endgame Mythical Castle soundtrack
+const MYTHICAL_CHORD_PROGRESSIONS = [
+  // Chord 1: Dm9 (The Legendary Dark Realm)
+  {
+    padFreqs: [146.83, 220.00, 293.66, 349.23, 440.00, 587.33, 659.25], // D3, A3, D4, F4, A4, D5, E5
+    leadBrass: [
+      { f: 587.33, t: 0.2, d: 1.1 },   // D5
+      { f: 659.25, t: 0.7, d: 0.8 },   // E5
+      { f: 698.46, t: 1.1, d: 1.3 },   // F5
+      { f: 880.00, t: 1.8, d: 1.8 },   // A5
+      { f: 1174.66, t: 2.8, d: 2.4 },  // D6 (heroic high crest)
+    ],
+    celesta: [
+      { f: 1174.66, t: 0.4 }, { f: 1396.91, t: 0.7 }, { f: 1760.00, t: 1.0 }, { f: 2349.32, t: 1.4 },
+    ],
+  },
+  // Chord 2: Bbmaj7#11 (Floating Mountain Bastions)
+  {
+    padFreqs: [116.54, 174.61, 233.08, 293.66, 349.23, 440.00, 587.33], // Bb2, F3, Bb3, D4, F4, A4, D5
+    leadBrass: [
+      { f: 698.46, t: 0.2, d: 1.0 },   // F5
+      { f: 880.00, t: 0.6, d: 0.9 },   // A5
+      { f: 987.77, t: 1.1, d: 1.2 },   // B5 (#11 celestial brightness)
+      { f: 1174.66, t: 1.7, d: 1.6 },  // D6
+      { f: 1396.91, t: 2.6, d: 2.2 },  // F6
+    ],
+    celesta: [
+      { f: 1396.91, t: 0.3 }, { f: 1760.00, t: 0.6 }, { f: 2093.00, t: 0.9 }, { f: 2793.83, t: 1.3 },
+    ],
+  },
+  // Chord 3: Gm9 (The Dragon Sky Ascent)
+  {
+    padFreqs: [98.00, 146.83, 196.00, 293.66, 349.23, 392.00, 440.00, 587.33], // G2, D3, G3, D4, F4, G4, A4, D5
+    leadBrass: [
+      { f: 587.33, t: 0.2, d: 0.9 },   // D5
+      { f: 783.99, t: 0.6, d: 1.0 },   // G5
+      { f: 880.00, t: 1.1, d: 1.2 },   // A5
+      { f: 1046.50, t: 1.7, d: 1.5 },  // C6
+      { f: 1174.66, t: 2.4, d: 2.4 },  // D6
+    ],
+    celesta: [
+      { f: 1174.66, t: 0.4 }, { f: 1567.98, t: 0.7 }, { f: 1760.00, t: 1.0 }, { f: 2349.32, t: 1.5 },
+    ],
+  },
+  // Chord 4: A7sus4 -> Asus4 (Crown Pinnacle of the Zenith Sky Throne)
+  {
+    padFreqs: [110.00, 164.81, 220.00, 293.66, 369.99, 440.00, 554.37], // A2, E3, A3, D4, F#4, A4, C#5
+    leadBrass: [
+      { f: 880.00, t: 0.2, d: 1.0 },   // A5
+      { f: 1108.73, t: 0.7, d: 1.2 },  // C#6
+      { f: 1318.51, t: 1.3, d: 1.5 },  // E6
+      { f: 1760.00, t: 2.0, d: 2.8 },  // A6 (Triumphant endgame resolution)
+    ],
+    celesta: [
+      { f: 1760.00, t: 0.4 }, { f: 2217.46, t: 0.8 }, { f: 2637.02, t: 1.2 }, { f: 3520.00, t: 1.7 },
+    ],
+  },
+];
+
+const playMythicalMusicPhrase = () => {
+  const ctx = getAudioContext();
+  if (!ctx || !isMythicalMusicPlaying) return;
+
+  try {
+    const now = ctx.currentTime;
+    const progression = MYTHICAL_CHORD_PROGRESSIONS[mythicalPhraseIndex % MYTHICAL_CHORD_PROGRESSIONS.length];
+    mythicalPhraseIndex++;
+
+    // 1. Resonant Cathedral Pipe Organ & Choir Pads (Sawtooth + Triangle with Warm Lowpass)
+    progression.padFreqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = idx < 2 ? 'sawtooth' : idx % 2 === 0 ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800 + idx * 70, now);
+      filter.Q.setValueAtTime(1.5, now);
+
+      // Powerful swell and resonant decay
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.022, now + 1.8);
+      gain.gain.linearRampToValueAtTime(0.016, now + 5.0);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 7.4);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 7.5);
+    });
+
+    // 2. Triumphant Symphonic Brass Melodic Fanfare Lines
+    progression.leadBrass.forEach(({ f, t, d }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(f, now + t);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1600, now + t);
+      filter.Q.setValueAtTime(1.8, now + t);
+
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.linearRampToValueAtTime(0.038, now + t + 0.06);
+      gain.gain.linearRampToValueAtTime(0.030, now + t + d * 0.7);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + d);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + t);
+      osc.stop(now + t + d + 0.05);
+    });
+
+    // 3. Cascading Stardust Celesta / Harp Twinkles
+    progression.celesta.forEach(({ f, t }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + t);
+
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.linearRampToValueAtTime(0.04, now + t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 1.2);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + t);
+      osc.stop(now + t + 1.25);
+    });
+
+    // 4. Starlight Cathedral Bell Carillon Ping
+    if (Math.random() > 0.2) {
+      const bellFreqs = [2349.32, 2793.83, 3520.00, 4698.63]; // D7, F7, A7, D8
+      const bellFreq = bellFreqs[Math.floor(Math.random() * bellFreqs.length)];
+
+      const bellOsc = ctx.createOscillator();
+      const bellGain = ctx.createGain();
+
+      bellOsc.type = 'sine';
+      bellOsc.frequency.setValueAtTime(bellFreq, now + 2.5);
+
+      bellGain.gain.setValueAtTime(0.0001, now + 2.5);
+      bellGain.gain.linearRampToValueAtTime(0.026, now + 2.52);
+      bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 4.8);
+
+      bellOsc.connect(bellGain);
+      bellGain.connect(ctx.destination);
+
+      bellOsc.start(now + 2.5);
+      bellOsc.stop(now + 4.85);
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * Starts the continuous Mythical Castle background soundtrack and cosmic wind ambience loop.
+ */
+export const startMythicalCastleMusic = (volume: number = 0.08) => {
+  stopMythicalCastleMusic();
+  isMythicalMusicPlaying = true;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    // 1. Synthesize Cosmic High-Altitude Wind & Thundering Waterfalls Noise
+    const bufferSize = ctx.sampleRate * 4;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    let lastVal = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      // Gentle howling cosmic wind and roaring water
+      lastVal = (lastVal + 0.02 * white) / 1.02;
+      data[i] = lastVal * 0.5;
+    }
+
+    mythicalWindSource = ctx.createBufferSource();
+    mythicalWindSource.buffer = buffer;
+    mythicalWindSource.loop = true;
+
+    const windFilter = ctx.createBiquadFilter();
+    windFilter.type = 'bandpass';
+    windFilter.frequency.setValueAtTime(460, ctx.currentTime);
+    windFilter.Q.setValueAtTime(0.85, ctx.currentTime);
+
+    mythicalWindGain = ctx.createGain();
+    mythicalWindGain.gain.setValueAtTime(0.001, ctx.currentTime);
+    mythicalWindGain.gain.linearRampToValueAtTime(volume * 0.4, ctx.currentTime + 2.0);
+
+    mythicalWindSource.connect(windFilter);
+    windFilter.connect(mythicalWindGain);
+    mythicalWindGain.connect(ctx.destination);
+
+    mythicalWindSource.start(0);
+
+    // 2. Start Epic Symphonic Melody Loop (every 7.2s)
+    mythicalPhraseIndex = 0;
+    playMythicalMusicPhrase();
+
+    mythicalMusicInterval = window.setInterval(() => {
+      if (isMythicalMusicPlaying) {
+        playMythicalMusicPhrase();
+      }
+    }, 7200);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * Stops the Mythical Castle soundtrack with smooth fadeout.
+ */
+export const stopMythicalCastleMusic = () => {
+  isMythicalMusicPlaying = false;
+
+  if (mythicalWindGain && audioCtx) {
+    try {
+      mythicalWindGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+      setTimeout(() => {
+        if (mythicalWindSource) {
+          try {
+            mythicalWindSource.stop();
+            mythicalWindSource.disconnect();
+          } catch {}
+          mythicalWindSource = null;
+        }
+      }, 850);
+    } catch {}
+  }
+
+  if (mythicalMusicInterval !== null) {
+    clearInterval(mythicalMusicInterval);
+    mythicalMusicInterval = null;
+  }
+};
+
+/**
+ * 👑 Distinct Mythical Castle Level Arrival Sound Effect (approx 1.8s).
+ * Resonant ascending imperial pipe organ & celestial fanfare with gold bell chime (D5 -> F5 -> A5 -> D6 -> F6 -> A6 -> D7).
+ */
+export const playMythicalNodeArriveSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const chords = [
+      { freq: 587.33, time: 0, dur: 1.2 },      // D5
+      { freq: 698.46, time: 0.1, dur: 1.25 },   // F5
+      { freq: 880.00, time: 0.2, dur: 1.35 },   // A5
+      { freq: 1174.66, time: 0.3, dur: 1.45 },  // D6
+      { freq: 1396.91, time: 0.42, dur: 1.6 },  // F6
+      { freq: 1760.00, time: 0.54, dur: 1.8 },  // A6
+      { freq: 2349.32, time: 0.68, dur: 2.2 },  // D7 (supreme pinnacle resolution)
+    ];
+
+    chords.forEach(({ freq, time, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now + time);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2200, now + time);
+
+      gain.gain.setValueAtTime(0.0001, now + time);
+      gain.gain.linearRampToValueAtTime(0.12, now + time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + time);
+      osc.stop(now + time + dur + 0.05);
+    });
+
+    // Golden carillon starlight bell overtone
+    [2793.83, 3520.00, 4698.63].forEach((bfreq, bidx) => {
+      const bOsc = ctx.createOscillator();
+      const bGain = ctx.createGain();
+
+      bOsc.type = 'sine';
+      bOsc.frequency.setValueAtTime(bfreq, now + 0.68 + bidx * 0.08);
+
+      bGain.gain.setValueAtTime(0.0001, now + 0.68 + bidx * 0.08);
+      bGain.gain.linearRampToValueAtTime(0.06, now + 0.68 + bidx * 0.08 + 0.015);
+      bGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.0);
+
+      bOsc.connect(bGain);
+      bGain.connect(ctx.destination);
+
+      bOsc.start(now + 0.68 + bidx * 0.08);
+      bOsc.stop(now + 2.05);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 👑 Distinct Mythical Castle Obsidian Paver & Viaduct Footstep Sound (approx 0.08s).
+ */
+export const playMythicalStepSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(720 + Math.random() * 260, now);
+    osc.frequency.exponentialRampToValueAtTime(320, now + 0.05);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.04, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 👑 Distinct Mythical Castle Grand Citadel Cathedral Bell & Chime (approx 2.0s).
+ */
+export const playMythicalCastleSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    // Deep cathedral bell chime with pipe organ chord
+    [146.83, 220.00, 293.66, 440.00, 587.33, 880.00, 1174.66].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = i < 2 ? 'sawtooth' : 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.07);
+
+      gain.gain.setValueAtTime(0.0001, now + i * 0.07);
+      gain.gain.linearRampToValueAtTime(0.09, now + i * 0.07 + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.07 + 1.8);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + i * 0.07);
+      osc.stop(now + i * 0.07 + 1.85);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 👑 Distinct Mythical Guardian Dragon Celestial Roar & Wing Whoosh (approx 1.2s).
+ */
+export const playMythicalDragonSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.linearRampToValueAtTime(260, now + 0.3);
+    osc.frequency.linearRampToValueAtTime(180, now + 0.8);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(480, now);
+    filter.Q.setValueAtTime(2.5, now);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.08, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 1.15);
+
+    // Stardust sparkle sweep
+    [1760, 2349, 2793, 3520].forEach((freq, idx) => {
+      const sOsc = ctx.createOscillator();
+      const sGain = ctx.createGain();
+
+      sOsc.type = 'sine';
+      sOsc.frequency.setValueAtTime(freq, now + 0.3 + idx * 0.08);
+
+      sGain.gain.setValueAtTime(0.0001, now + 0.3 + idx * 0.08);
+      sGain.gain.linearRampToValueAtTime(0.04, now + 0.3 + idx * 0.08 + 0.015);
+      sGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+
+      sOsc.connect(sGain);
+      sGain.connect(ctx.destination);
+
+      sOsc.start(now + 0.3 + idx * 0.08);
+      sOsc.stop(now + 1.15);
+    });
+  } catch {
+    // Audio fallback
+  }
+};

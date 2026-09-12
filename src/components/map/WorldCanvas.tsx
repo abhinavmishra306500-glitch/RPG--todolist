@@ -4,6 +4,7 @@ import { BronzeVillageWorld } from './BronzeVillageWorld';
 import { SilverVillageWorld } from './SilverVillageWorld';
 import { GoldCityWorld } from './GoldCityWorld';
 import { DiamondCityWorld } from './DiamondCityWorld';
+import { MythicalCastleWorld } from './MythicalCastleWorld';
 
 interface WorldCanvasProps {
   world: MapWorldDef;
@@ -16,6 +17,7 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({ world, onCanvasClick, 
   const isSilverVillage = world.id === 'silver-village';
   const isGoldCity = world.id === 'gold-city';
   const isDiamondCity = world.id === 'diamond-city';
+  const isMythicalCastle = world.id === 'mythical-castle';
 
   return (
     <div className="relative w-full h-full select-none overflow-hidden bg-slate-950">
@@ -44,6 +46,9 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({ world, onCanvasClick, 
         ) : isDiamondCity ? (
           /* 💎 Diamond City: Authentic Handcrafted 16-Bit Pixel-Art RPG World */
           <DiamondCityWorld />
+        ) : isMythicalCastle ? (
+          /* 👑 Mythical Castle: Authentic Handcrafted 16-Bit Pixel-Art Endgame World */
+          <MythicalCastleWorld />
         ) : (
           /* Other Worlds: Neutral dark game canvas */
           <g>
