@@ -47,11 +47,14 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
   - Automated level advancement with rollover XP.
   - Clamped stat and health mutation utilities.
 - **Character Stats & Profile Panel (`CharacterStatsPanel.tsx`)**:
-  - Shows Character Name, Live 2D Pixel Sprite Preview, Level badge, and League crest.
-  - Animated XP progress bar and Health vital bar with live metrics.
-  - 4 independent attribute cards with custom RPG iconography.
-  - Gold purse and Daily Streak indicators.
-  - Interactive **Progression Sandbox** allowing real-time testing of XP gain, level up, health change, and gold rewards.
+  - Displays Character Name and the exact live 2D pixel-art character sprite created in Step 2.
+  - Large, prominent **XP Progress Bar** clearly displaying `0 / 100 XP` with pixel progress percentage.
+  - **Health Bar** displaying `100 / 100 HP`.
+  - Clean **Level Badge** (`LVL 1`) without class or adventurer titles.
+  - Dedicated **League Section** clearly displaying `BRONZE`.
+  - 4 independent core RPG attribute cards: `INTELLIGENCE` (0), `STRENGTH` (0), `STAMINA` (0), `SKILLS` (0).
+  - Dedicated `GOLD` (0 G) and `STREAK` (0 Days) tracking sections.
+  - Clean, polished player-facing UI with seamless character editing and logout controls.
 
 ---
 

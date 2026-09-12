@@ -17,20 +17,24 @@ import { PixelSparkle, PixelSword } from '../common/PixelIcons';
 import { Sparkles, ArrowLeft, Check, Wand2 } from 'lucide-react';
 
 interface CharacterCreationScreenProps {
+  initialCharacter?: CharacterProfile;
   initialName?: string;
   onConfirmCharacter: (character: CharacterProfile) => void;
   onBackToLogin: () => void;
 }
 
 export const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({
+  initialCharacter,
   initialName = '',
   onConfirmCharacter,
   onBackToLogin,
 }) => {
-  const [character, setCharacter] = useState<CharacterProfile>({
-    ...DEFAULT_CHARACTER,
-    name: initialName,
-  });
+  const [character, setCharacter] = useState<CharacterProfile>(
+    initialCharacter || {
+      ...DEFAULT_CHARACTER,
+      name: initialName,
+    }
+  );
 
   const [nameError, setNameError] = useState<string | undefined>();
   const [activeTab, setActiveTab] = useState<'appearance' | 'outfit'>('appearance');

@@ -66,9 +66,16 @@ export const App: React.FC = () => {
   };
 
   const handleConfirmCharacter = (character: CharacterProfile) => {
-    const initialPlayer = createInitialPlayerState(character);
     setCharacterProfile(character);
-    setPlayerState(initialPlayer);
+    setPlayerState((prev) => {
+      if (prev) {
+        return {
+          ...prev,
+          character,
+        };
+      }
+      return createInitialPlayerState(character);
+    });
     setScreen('character_created');
   };
 
@@ -98,6 +105,7 @@ export const App: React.FC = () => {
       {/* --- SCREEN 1: CHARACTER CREATION --- */}
       {screen === 'character_creation' && (
         <CharacterCreationScreen
+          initialCharacter={characterProfile || undefined}
           initialName={playerName || characterProfile?.name || ''}
           onConfirmCharacter={handleConfirmCharacter}
           onBackToLogin={handleLogOut}
