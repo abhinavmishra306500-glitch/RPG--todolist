@@ -70,6 +70,31 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
 - **Bundler**: Vite
 - **Styling**: Tailwind CSS + Custom 2D Pixel Art SVG Graphics
 - **Icons**: Lucide React
+- **Audio Engine**: Web Audio API (real-time harmonic synthesizers)
+
+---
+
+## 🎨 Design System & Tailwind Architecture (`tailwind.config.js`)
+
+Life RPG uses an original, custom-crafted 2D retro RPG design system configured directly in Tailwind:
+
+- **Typography**:
+  - `font-pixel`: `["Press Start 2P", monospace]` for authentic 8-bit retro headers, badges, and stats.
+  - `font-sans`: `["Plus Jakarta Sans", sans-serif]` for high-readability form fields and body text.
+- **Curated Color Tokens (`colors.rpg`)**:
+  - `rpg.player`: Emerald quest palette (`#10b981`, hover `#059669`, accent `#34d399`, dark `#064e3b`).
+  - `rpg.dev`: Amber developer palette (`#f59e0b`, hover `#d97706`, accent `#fbbf24`, dark `#78350f`).
+  - `rpg.card` / `rpg.dark`: Deep twilight backgrounds (`#1a172a`, `#0e0d17`) with pixel borders (`#363058`).
+- **Hard-Edge Pixel Shadows (`boxShadow`)**:
+  - `shadow-pixel-sm`: `2px 2px 0 0 rgba(0,0,0,0.6)`
+  - `shadow-pixel`: `4px 4px 0 0 rgba(0,0,0,0.7)`
+  - `shadow-pixel-lg`: `6px 6px 0 0 rgba(0,0,0,0.8)`
+  - `shadow-inner-pixel`: Inset dimensional borders for authentic retro UI cartridges.
+- **Custom CSS & Micro-Animations**:
+  - `float-slow`, `pulse-glow`, `sparkle`: Ambient UI particle effects.
+  - `animate-rpg-heartbeat`: Rhythmic living heartbeat for 100/100 maximum HP.
+  - `animate-level-up-glow`: Radiant amber pulse for level advancements.
+  - `animate-stat-pulse`: Emerald highlight pulse on stat increments.
 
 ---
 
