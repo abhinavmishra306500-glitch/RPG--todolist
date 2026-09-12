@@ -53,21 +53,21 @@ assert(getWorldByTier('Mythical').id === 'mythical-castle', 'Mythical tier maps 
 
 // Test 3: Initial Progression State
 const initialProg = INITIAL_MAP_PROGRESSION;
-assert(initialProg.currentMapLevel === 11, 'Initial map level is 11');
-assert(initialProg.maxUnlockedLevel === 11, 'Max unlocked level initially is 11');
+assert(initialProg.currentMapLevel === 1, 'Initial map level is 1');
+assert(initialProg.maxUnlockedLevel === 1, 'Max unlocked level initially is 1');
 assert(initialProg.completedLevels.length === 0, 'No levels completed initially');
 
-// Test 4: Node States at Level 11
-assert(getMapNodeState(11, initialProg) === 'current', 'Level 11 is "current" initially');
-assert(getMapNodeState(12, initialProg) === 'locked', 'Level 12 is "locked" initially before 11 is completed');
-assert(getMapNodeState(13, initialProg) === 'locked', 'Level 13 is "locked" initially');
-assert(getMapNodeState(20, initialProg) === 'locked', 'Level 20 is "locked" initially');
+// Test 4: Node States at Level 1
+assert(getMapNodeState(1, initialProg) === 'current', 'Level 1 is "current" initially');
+assert(getMapNodeState(2, initialProg) === 'locked', 'Level 2 is "locked" initially before 1 is completed');
+assert(getMapNodeState(3, initialProg) === 'locked', 'Level 3 is "locked" initially');
+assert(getMapNodeState(10, initialProg) === 'locked', 'Level 10 is "locked" initially');
 
 // Test 5: Can Advance Logic
-assert(canAdvanceToLevel(11, initialProg) === false, 'Cannot advance to already current level 11');
-assert(canAdvanceToLevel(12, initialProg) === true, 'Can advance from 11 to 12 (sequential next)');
-assert(canAdvanceToLevel(13, initialProg) === false, 'Cannot skip level 12 to jump to 13');
-assert(canAdvanceToLevel(10, initialProg) === false, 'Cannot move backwards to level 10');
+assert(canAdvanceToLevel(1, initialProg) === false, 'Cannot advance to already current level 1');
+assert(canAdvanceToLevel(2, initialProg) === true, 'Can advance from 1 to 2 (sequential next)');
+assert(canAdvanceToLevel(3, initialProg) === false, 'Cannot skip level 2 to jump to 3');
+assert(canAdvanceToLevel(0, initialProg) === false, 'Cannot move backwards to level 0');
 
 // Test 6: Advancing Map Level with PlayerState
 const mockChar: CharacterProfile = {
@@ -82,30 +82,30 @@ const mockChar: CharacterProfile = {
 };
 let player = createInitialPlayerState(mockChar);
 assert(player.map !== undefined, 'PlayerState contains map progression state');
-assert(player.map?.currentMapLevel === 11, 'PlayerState map starts at Level 11');
+assert(player.map?.currentMapLevel === 1, 'PlayerState map starts at Level 1');
 assert(player.progression.level === 1, 'PlayerState RPG Level remains 1 (Map level is independent of RPG Level)');
 assert(player.economy.gold === 0, 'PlayerState Gold remains 0');
 assert(player.league.name === 'Bronze', 'PlayerState League remains Bronze');
 
-// Test 7: Sequential advance 11 -> 12
-const res11 = advanceMapLevel(player);
-assert(res11.advanced === true, 'Successfully advanced from 11');
-assert(res11.fromLevel === 11 && res11.toLevel === 12, 'Advanced from 11 to 12');
-player = res11.updatedPlayer;
-assert(player.map?.currentMapLevel === 12, 'Player map level is now 12');
-assert(player.map?.completedLevels.includes(11), 'Level 11 is recorded in completedLevels');
-assert(getMapNodeState(11, player.map!) === 'completed', 'Level 11 node is completed');
-assert(getMapNodeState(12, player.map!) === 'current', 'Level 12 node is current');
-assert(getMapNodeState(13, player.map!) === 'locked', 'Level 13 node is locked');
+// Test 7: Sequential advance 1 -> 2
+const res1 = advanceMapLevel(player);
+assert(res1.advanced === true, 'Successfully advanced from 1');
+assert(res1.fromLevel === 1 && res1.toLevel === 2, 'Advanced from 1 to 2');
+player = res1.updatedPlayer;
+assert(player.map?.currentMapLevel === 2, 'Player map level is now 2');
+assert(player.map?.completedLevels.includes(1), 'Level 1 is recorded in completedLevels');
+assert(getMapNodeState(1, player.map!) === 'completed', 'Level 1 node is completed');
+assert(getMapNodeState(2, player.map!) === 'current', 'Level 2 node is current');
+assert(getMapNodeState(3, player.map!) === 'locked', 'Level 3 node is locked');
 
 // Test 8: Waypoints Path calculation
-const waypoints11to12 = getPathWaypointsBetweenLevels(11, 12);
-assert(waypoints11to12.length >= 2, 'Waypoints path between 11 and 12 has at least start and end point');
-assert(waypoints11to12[0].x === SILVER_VILLAGE_LEVELS[0].position.x, 'First waypoint matches Level 11 coords');
+const waypoints1to2 = getPathWaypointsBetweenLevels(1, 2);
+assert(waypoints1to2.length >= 2, 'Waypoints path between 1 and 2 has at least start and end point');
+assert(waypoints1to2[0].x === 100, 'First waypoint matches Level 1 coords');
 
 // Test 9: Normalizer
 const normalized = normalizeMapProgression(null);
-assert(normalized.currentMapLevel === 11, 'Normalized null map returns level 11');
+assert(normalized.currentMapLevel === 1, 'Normalized null map returns level 1');
 assert(normalized.completedLevels.length === 0, 'Normalized null map returns empty completed list');
 
 console.log('✨ ALL FULL-SCREEN WORLD MAP TESTS PASSED SUCCESSFULLY! ✨');
