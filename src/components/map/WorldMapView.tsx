@@ -7,6 +7,7 @@ import {
   getMapNodeState,
   getMapLevelDef,
   advanceMapLevel,
+  regressMapLevel,
   getPathWaypointsBetweenLevels,
   getWorldById,
   getWorldByLevel,
@@ -27,9 +28,11 @@ import {
   Sparkles,
   MapPin,
   ChevronRight,
+  ChevronLeft,
   Layers,
   Volume2,
   VolumeX,
+  Terminal,
 } from 'lucide-react';
 
 interface WorldMapViewProps {
@@ -57,6 +60,7 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
   const [selectedLevelNode, setSelectedLevelNode] = useState<MapLevelDef | null>(null);
   const [showWorldSelector, setShowWorldSelector] = useState(false);
   const [isSoundOn, setIsSoundOn] = useState(true);
+  const [devToast, setDevToast] = useState<string | null>(null);
 
   // Forest Ambience Sound Loop
   useEffect(() => {
@@ -91,20 +95,45 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
     isWalking,
     walkCycle,
     startWalkingAlongPath,
+    teleportToPosition,
   } = useCharacterMovement({
     initialPosition: currentLevelDef.position,
     onMovementComplete: handleArrival,
   });
 
-  // Handle advancing to next available level
-  const handleAdvanceToNext = () => {
+  const showDevMessage = (msg: string) => {
+    setDevToast(msg);
+    setTimeout(() => setDevToast(null), 2500);
+  };
+
+  // Step backward helper (Dev key: [ or B or Shift+Left)
+  const handleStepBackward = useCallback(() => {
+    const result = regressMapLevel(player);
+    if (result.regressed) {
+      playStatIncreaseSound();
+      onUpdatePlayer(result.updatedPlayer);
+      const prevDef = getMapLevelDef(result.toLevel);
+      teleportToPosition(prevDef.position);
+      if (prevDef.worldId !== selectedWorld.id) {
+        setSelectedWorld(getWorldById(prevDef.worldId));
+      }
+      showDevMessage(`⏪ DEV: Stepped Back to Level ${result.toLevel} (${prevDef.name})`);
+    } else {
+      showDevMessage('⚠️ Already at Level 1 (Cannot go backward further)');
+    }
+  }, [player, onUpdatePlayer, teleportToPosition, selectedWorld.id]);
+
+  // Step forward helper (Dev key: ] or N or Shift+Right)
+  const handleAdvanceToNext = useCallback(() => {
     if (isWalking) return;
     const nextLevelNum = mapProgression.currentMapLevel + 1;
-    if (nextLevelNum > 50) return;
+    if (nextLevelNum > 50) {
+      showDevMessage('⭐ Reached Final Level 50!');
+      return;
+    }
 
     const nextDef = getMapLevelDef(nextLevelNum);
 
-    // If next level is in another world, switch to that world
     if (nextDef.worldId !== selectedWorld.id) {
       setSelectedWorld(getWorldById(nextDef.worldId));
     }
@@ -112,7 +141,47 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
     playStatIncreaseSound();
     const waypoints = getPathWaypointsBetweenLevels(mapProgression.currentMapLevel, nextLevelNum);
     startWalkingAlongPath(waypoints, nextLevelNum);
-  };
+    showDevMessage(`⏩ Walking to Level ${nextLevelNum}...`);
+  }, [isWalking, mapProgression.currentMapLevel, selectedWorld.id, startWalkingAlongPath]);
+
+  // Developer Keyboard Shortcuts Listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Backward shortcuts: [ , B , b , < , Shift + ArrowLeft
+      if (e.key === '[' || e.key === 'b' || e.key === 'B' || e.key === '<' || (e.shiftKey && e.key === 'ArrowLeft')) {
+        e.preventDefault();
+        handleStepBackward();
+      }
+      // Forward shortcuts: ] , N , n , > , Shift + ArrowRight
+      else if (e.key === ']' || e.key === 'n' || e.key === 'N' || e.key === '>' || (e.shiftKey && e.key === 'ArrowRight')) {
+        e.preventDefault();
+        handleAdvanceToNext();
+      }
+      // Reset to Level 1: R, r, 0
+      else if (e.key === 'r' || e.key === 'R' || e.key === '0') {
+        e.preventDefault();
+        const resetMap = {
+          ...mapProgression,
+          currentMapLevel: 1,
+          completedLevels: [],
+          selectedWorldId: 'bronze-village',
+        };
+        onUpdatePlayer({ ...player, map: resetMap });
+        setSelectedWorld(getWorldById('bronze-village'));
+        const l1Def = getMapLevelDef(1);
+        teleportToPosition(l1Def.position);
+        showDevMessage('🔄 DEV: Reset Map Progression to Level 1 (Bronze Village)');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleStepBackward, handleAdvanceToNext, mapProgression, onUpdatePlayer, player, teleportToPosition]);
 
   const isHeroInThisWorld = selectedWorld.id === currentLevelDef.worldId;
   const nextLevelNumber = mapProgression.currentMapLevel + 1;
@@ -304,6 +373,20 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
           </div>
         </div>
 
+        {/* Dev Step Backward Button */}
+        {mapProgression.currentMapLevel > 1 && (
+          <button
+            type="button"
+            onClick={handleStepBackward}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300/80 hover:text-amber-200 border border-amber-600/50 rounded-lg text-xs font-bold transition-all active:scale-95 shadow"
+            title="Developer: Step Backward 1 Level (Key: [ or B)"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Step Back</span>
+            <span className="text-[10px] bg-slate-950 px-1 py-0.2 rounded text-slate-400 font-mono">[</span>
+          </button>
+        )}
+
         {/* Walk / Advance to Next Level Button */}
         {canAdvance && (
           <button
@@ -319,9 +402,18 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
             <Sparkles className="w-4 h-4 text-slate-950" />
             <span>{isWalking ? 'Walking Along Path...' : `Walk to Level ${nextLevelNumber}`}</span>
             <ChevronRight className="w-4 h-4 text-slate-950" />
+            <span className="text-[10px] bg-amber-700/80 px-1 py-0.2 rounded text-amber-100 font-mono hidden sm:inline">]</span>
           </button>
         )}
       </footer>
+
+      {/* Floating Developer Action Toast */}
+      {devToast && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-950/95 border-2 border-amber-400 text-amber-200 px-4 py-1.5 rounded-full shadow-2xl text-xs font-black flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
+          <Terminal className="w-3.5 h-3.5 text-amber-400" />
+          <span>{devToast}</span>
+        </div>
+      )}
 
       {/* ===================================================================
           5. MINIMAL FLOATING LEVEL DETAILS MODAL (When clicking a node)

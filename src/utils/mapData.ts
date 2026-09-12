@@ -795,6 +795,51 @@ export const advanceMapLevel = (
 };
 
 /**
+ * Developer helper: Regresses player backward by 1 Map Level.
+ */
+export const regressMapLevel = (
+  player: PlayerState
+): {
+  updatedPlayer: PlayerState;
+  regressed: boolean;
+  fromLevel: number;
+  toLevel: number;
+} => {
+  const currentMap = normalizeMapProgression(player.map);
+  const fromLevel = currentMap.currentMapLevel;
+
+  if (fromLevel <= 1) {
+    return {
+      updatedPlayer: player,
+      regressed: false,
+      fromLevel,
+      toLevel: fromLevel,
+    };
+  }
+
+  const toLevel = fromLevel - 1;
+  const targetWorld = getWorldByLevel(toLevel);
+
+  const updatedMap: MapProgressionState = {
+    ...currentMap,
+    currentMapLevel: toLevel,
+    selectedWorldId: targetWorld.id,
+  };
+
+  const updatedPlayer: PlayerState = {
+    ...player,
+    map: updatedMap,
+  };
+
+  return {
+    updatedPlayer,
+    regressed: true,
+    fromLevel,
+    toLevel,
+  };
+};
+
+/**
  * Returns complete path waypoints from node A to node B.
  */
 export const getPathWaypointsBetweenLevels = (fromLevel: number, toLevel: number): Point2D[] => {
