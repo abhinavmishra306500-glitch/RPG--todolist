@@ -24,11 +24,13 @@ import {
   Edit3,
   LogOut,
   Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 
 interface CharacterStatsPanelProps {
   initialPlayer: PlayerState;
   onEditCharacter: () => void;
+  onContinueToQuests?: () => void;
   onLogOut: () => void;
   isDevMode?: boolean;
 }
@@ -36,6 +38,7 @@ interface CharacterStatsPanelProps {
 export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
   initialPlayer,
   onEditCharacter,
+  onContinueToQuests,
   onLogOut,
   isDevMode = false,
 }) => {
@@ -429,24 +432,40 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
             </div>
           )}
 
-          {/* Action Navigation Controls */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          {/* CHARACTER STATS → QUEST PAGE: Clear CONTINUE / NEXT button */}
+          {onContinueToQuests && (
+            <div className="pt-2 border-t-2 border-[#2b2545]">
+              <RpgButton
+                type="button"
+                variant="player"
+                size="lg"
+                fullWidth
+                onClick={onContinueToQuests}
+                icon={<ArrowRight size={16} className="text-slate-950 stroke-[3]" />}
+              >
+                CONTINUE TO QUESTS ➔
+              </RpgButton>
+            </div>
+          )}
+
+          {/* Secondary Action Navigation Controls */}
+          <div className="grid grid-cols-2 gap-3 pt-1">
             <RpgButton
               type="button"
               variant="secondary"
-              size="md"
+              size="sm"
               onClick={onEditCharacter}
-              icon={<Edit3 size={14} />}
+              icon={<Edit3 size={13} />}
             >
               Edit Character
             </RpgButton>
 
             <RpgButton
               type="button"
-              variant="player"
-              size="md"
+              variant="secondary"
+              size="sm"
               onClick={onLogOut}
-              icon={<LogOut size={14} />}
+              icon={<LogOut size={13} />}
             >
               Log Out
             </RpgButton>

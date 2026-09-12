@@ -62,29 +62,29 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
     - **Stat Number Count-Up & Highlight**: Smooth integer animation and emerald card pulse on stat increases.
   - Clean, polished player-facing UI with seamless character editing and logout controls.
 
-### ✅ Step 4: Quest System
-- **Core Concept**: Real-world tasks modeled as RPG quests to progress the adventurer.
-- **Quest Data Model (`Quest`)**:
-  - `id`, `title`, `category`, `difficulty`, `deadline`, `completed`, `createdAt`.
-- **5 Core Categories** (determines future character attribute rewards):
-  - 🧠 `Intelligence` (Cyan)
-  - 💪 `Strength` (Red)
-  - 🏃 `Stamina` (Emerald)
-  - 🛠 `Skills` (Purple)
-  - ❤️ `Health` (Rose)
-- **3 Difficulty Tiers**: `Easy` (★☆☆), `Medium` (★★☆), `Hard` (★★★).
-- **Interactive Add Quest Modal (`AddQuestModal.tsx`)**:
-  - Opened via prominent **`+ ADD QUEST`** button.
-  - Form validation, category selector cards, difficulty cards, and a quick **"Today"** deadline selector.
-- **Quest Board & Filters (`QuestBoard.tsx`)**:
-  - Live filter tabs: **`All`**, **`Active`**, and **`Completed`** with count badges.
-  - Interactive Quest Cards (`QuestCard.tsx`) displaying title, category, difficulty, deadline, and completion status.
-- **Completion Feedback & Audio**:
+### ✅ Step 4: Dedicated Quest Page & Quest System
+- **Navigation Flow**: `Login` ➔ `Character Creation` ➔ `Character Stats` ➔ `Quest Page` (via prominent **`CONTINUE TO QUESTS ➔`** button).
+- **Dedicated Quest Page (`QuestPage.tsx`)**:
+  - Completely separate from the Character Stats page to keep both interfaces clean and uncluttered.
+  - Contains two primary quest sections + Quest History:
+    1. **☀️ TODAY'S QUESTS**: Short-term tasks intended for today (15m, 30m, 1h, 2h, 3h). Resets each new calendar day; previous completed tasks archive into history, while incomplete tasks do not carry over.
+    2. **⚔️ ACTIVE QUESTS**: Long-term campaigns spanning multiple days (1d, 3d, 7d, 14d, 30d). Continues seamlessly across calendar days until completed or expired.
+    3. **📜 QUEST HISTORY**: Dedicated archive view preserving completed quests from previous days with name, category, difficulty, created date, and completion date.
+- **Automated Duration Routing (`AddQuestModal.tsx`)**:
+  - Modal with 5 RPG categories (🧠 Intelligence, 💪 Strength, 🏃 Stamina, 🛠 Skills, ❤️ Health) and 3 difficulties (Easy, Medium, Hard).
+  - Duration picker with Short-Term and Long-Term presets + custom inputs.
+  - System **automatically routes** short-term quests (<24h) to Today's Quests and long-term quests to Active Quests without requiring manual sorting.
+- **Dynamic Countdown Timers (`QuestCard.tsx`)**:
+  - Auto-updating remaining-time indicators (e.g. *"45 min remaining"*, *"2 hours remaining"*, *"6 days remaining"*).
+  - Displays red animated **`EXPIRED`** badge if deadline passes.
+- **Completion Effects & Audio**:
   - Strikethrough title with green `COMPLETED` tag.
-  - Green particle completion flash animation (`animate-stat-pulse`).
-  - Triumphant 4-note ascending quest complete jingle via Web Audio API (`playQuestCompleteSound`).
+  - Emerald pulse celebration animation (`animate-stat-pulse`).
+  - Triumphant 4-note ascending quest clear chime via Web Audio API (`playQuestCompleteSound`).
   - Option to reactivate quests.
-  - Strict Step 4 scope: marking quests complete does not award XP/gold yet.
+  - **Strict Step 4 Boundary**: Marking quests complete does not award XP/gold yet (reserved for upcoming reward layer).
+- **Daily Calendar Refresh & LocalStorage Persistence (`questStorage.ts`)**:
+  - Date-based tracking (`YYYY-MM-DD`). Automatically handles day rollovers even if browser is closed and reopened the next day.
 
 ---
 

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { UserRole, LoginFormData, AuthMockSession } from './types/auth';
 import type { CharacterProfile } from './types/character';
 import type { PlayerState } from './types/progression';
 import type { Quest } from './types/quest';
-import { INITIAL_QUESTS } from './types/quest';
+import { loadQuestsWithDailyRefresh, saveQuestsToStorage } from './utils/questStorage';
 import { createInitialPlayerState } from './utils/progression';
 import { DEFAULT_CHARACTER } from './types/character';
 import { RoleSelector } from './components/auth/RoleSelector';
@@ -13,13 +13,13 @@ import { MockSessionNotice } from './components/auth/MockSessionNotice';
 import { CharacterCreationScreen } from './components/character/CharacterCreationScreen';
 import { CharacterCreatedSuccess } from './components/character/CharacterCreatedSuccess';
 import { CharacterStatsPanel } from './components/character/CharacterStatsPanel';
-import { QuestBoard } from './components/quest/QuestBoard';
+import { QuestPage } from './components/quest/QuestPage';
 import { AddQuestModal } from './components/quest/AddQuestModal';
 import { RpgCard } from './components/ui/RpgCard';
 import { PixelHeart, PixelSword, PixelWrench } from './components/common/PixelIcons';
 import { RpgOverworldBackground } from './components/environment/RpgOverworldBackground';
 
-type AppScreen = 'login' | 'character_creation' | 'character_created' | 'character_stats';
+type AppScreen = 'login' | 'character_creation' | 'character_created' | 'character_stats' | 'quest_page';
 
 export const App: React.FC = () => {
   const [screen, setScreen] = useState<AppScreen>('login');
@@ -29,8 +29,13 @@ export const App: React.FC = () => {
   const [characterProfile, setCharacterProfile] = useState<CharacterProfile | null>(null);
   const [playerState, setPlayerState] = useState<PlayerState | null>(null);
   const [playerName, setPlayerName] = useState('');
-  const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
+  const [quests, setQuests] = useState<Quest[]>(() => loadQuestsWithDailyRefresh());
   const [isAddQuestOpen, setIsAddQuestOpen] = useState(false);
+
+  // Sync quests to localStorage whenever updated
+  useEffect(() => {
+    saveQuestsToStorage(quests);
+  }, [quests]);
 
   const handleRoleChange = (newRole: UserRole) => {
     setCurrentRole(newRole);
@@ -138,26 +143,30 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* --- SCREEN 3: CHARACTER STATS & QUEST BOARD (STEP 3 & 4) --- */}
+      {/* --- SCREEN 3: CHARACTER STATS PANEL (STEP 3) --- */}
       {screen === 'character_stats' && playerState && (
-        <div className="w-full max-w-2xl mx-auto my-auto relative z-10 space-y-6">
-          <CharacterStatsPanel
-            initialPlayer={playerState}
-            onEditCharacter={handleEditCharacter}
-            onLogOut={handleLogOut}
-            isDevMode={currentRole === 'developer' || activeSession?.role === 'developer'}
-          />
-
-          {/* --- STEP 4: QUEST SYSTEM BOARD --- */}
-          <QuestBoard
-            quests={quests}
-            onAddQuestClick={() => setIsAddQuestOpen(true)}
-            onToggleComplete={handleToggleQuest}
-          />
-        </div>
+        <CharacterStatsPanel
+          initialPlayer={playerState}
+          onEditCharacter={handleEditCharacter}
+          onContinueToQuests={() => setScreen('quest_page')}
+          onLogOut={handleLogOut}
+          isDevMode={currentRole === 'developer' || activeSession?.role === 'developer'}
+        />
       )}
 
-      {/* --- SCREEN 3: LOGIN PAGE (Preserved 100%) --- */}
+      {/* --- SCREEN 4: DEDICATED QUEST PAGE (STEP 4) --- */}
+      {screen === 'quest_page' && playerState && (
+        <QuestPage
+          character={playerState.character}
+          level={playerState.progression.level}
+          quests={quests}
+          onAddQuestClick={() => setIsAddQuestOpen(true)}
+          onToggleComplete={handleToggleQuest}
+          onBackToStats={() => setScreen('character_stats')}
+        />
+      )}
+
+      {/* --- SCREEN 5: LOGIN PAGE (Preserved 100%) --- */}
       {screen === 'login' && (
         <main className="w-full max-w-md mx-auto my-auto relative z-10">
           {/* Game Title & Header */}
@@ -211,6 +220,18 @@ export const App: React.FC = () => {
                       className="w-full py-2 bg-emerald-600/30 hover:bg-emerald-600/50 border-2 border-emerald-400 text-emerald-200 text-xs font-pixel rounded-none transition-colors"
                     >
                       📊 Test Character Stats & Profile (Dev Mode)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!playerState) {
+                          setPlayerState(createInitialPlayerState(characterProfile || DEFAULT_CHARACTER));
+                        }
+                        setScreen('quest_page');
+                      }}
+                      className="w-full py-2 bg-indigo-600/30 hover:bg-indigo-600/50 border-2 border-indigo-400 text-indigo-200 text-xs font-pixel rounded-none transition-colors"
+                    >
+                      📜 Test Dedicated Quest Page (Dev Mode)
                     </button>
                   </div>
                 )}
