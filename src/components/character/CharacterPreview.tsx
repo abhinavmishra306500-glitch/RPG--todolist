@@ -346,12 +346,15 @@ export const CharacterPreview: React.FC<CharacterPreviewProps> = ({
       </div>
 
       {/* Nameplate tag beneath character preview */}
-      <div className="mt-3 text-center">
-        <div className="inline-block px-3 py-1 bg-[#12101e] border-2 border-[#3b355a] rounded shadow-[2px_2px_0_0_#000]">
-          <p className="text-xs font-pixel text-amber-300 tracking-wider">
+      <div className="mt-3 text-center w-full max-w-full flex justify-center px-2">
+        <div className="inline-flex flex-col items-center max-w-[200px] sm:max-w-[240px] w-full px-3 py-1.5 bg-[#12101e] border-2 border-[#3b355a] rounded shadow-[2px_2px_0_0_#000] overflow-hidden">
+          <p
+            className="text-[11px] sm:text-xs font-pixel text-amber-300 tracking-wider truncate w-full text-center block"
+            title={profile.name.trim() || 'HERO OF LIFE'}
+          >
             {profile.name.trim() || 'HERO OF LIFE'}
           </p>
-          <p className="text-[10px] text-slate-400 font-sans capitalize mt-0.5">
+          <p className="text-[10px] text-slate-400 font-sans capitalize mt-0.5 truncate w-full text-center block">
             {profile.gender} • {profile.outfitStyleId}
           </p>
         </div>

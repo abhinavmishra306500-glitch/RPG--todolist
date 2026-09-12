@@ -4,16 +4,18 @@ import { QUEST_CATEGORIES, QUEST_DIFFICULTIES } from '../../types/quest';
 import { calculateQuestReward } from '../../utils/questRewards';
 import { formatRemainingTime } from '../../utils/questStorage';
 import { playQuestCompleteSound } from '../../utils/soundEffects';
-import { Check, Clock, AlertTriangle, Sparkles, RotateCcw, Zap, Coins } from 'lucide-react';
+import { Check, Clock, AlertTriangle, Sparkles, RotateCcw, Zap, Coins, Trash2 } from 'lucide-react';
 
 interface QuestCardProps {
   quest: Quest;
   onToggleComplete: (id: string) => void;
+  onRequestDelete?: (id: string) => void;
 }
 
 export const QuestCard: React.FC<QuestCardProps> = ({
   quest,
   onToggleComplete,
+  onRequestDelete,
 }) => {
   const [justCompleted, setJustCompleted] = useState(false);
   const [remainingText, setRemainingText] = useState(() =>
@@ -159,8 +161,8 @@ export const QuestCard: React.FC<QuestCardProps> = ({
           </div>
         </div>
 
-        {/* Right: Action Button */}
-        <div className="shrink-0 flex items-center self-end sm:self-center">
+        {/* Right: Action & Delete Controls */}
+        <div className="shrink-0 flex items-center gap-2 self-end sm:self-center">
           {quest.completed ? (
             <div className="flex items-center gap-1.5">
               <span className="px-2.5 py-1.5 bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 text-[10px] font-pixel flex items-center gap-1 shadow-[1px_1px_0_0_#000]">
@@ -185,6 +187,18 @@ export const QuestCard: React.FC<QuestCardProps> = ({
               <Check size={14} className="stroke-[3]" />
               <span>Complete Quest</span>
               {justCompleted && <Sparkles size={12} className="text-amber-200 animate-spin" />}
+            </button>
+          )}
+
+          {onRequestDelete && (
+            <button
+              type="button"
+              onClick={() => onRequestDelete(quest.id)}
+              className="p-2 bg-[#1b1219] hover:bg-rose-950/90 border border-rose-900/60 hover:border-rose-500 text-rose-400 hover:text-rose-200 text-[10px] font-pixel transition-colors shadow-[1px_1px_0_0_#000] flex items-center justify-center"
+              title="Delete Quest"
+              aria-label={`Delete ${quest.title}`}
+            >
+              <Trash2 size={13} />
             </button>
           )}
         </div>

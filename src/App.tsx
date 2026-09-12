@@ -208,6 +208,10 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleDeleteQuest = (id: string) => {
+    setQuests((prev) => prev.filter((q) => q.id !== id));
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col justify-between py-6 px-4 sm:px-6 relative overflow-hidden">
       {/* 2D Pixel-Art RPG Overworld Background Environment */}
@@ -252,6 +256,7 @@ export const App: React.FC = () => {
           quests={quests}
           onAddQuestClick={() => setIsAddQuestOpen(true)}
           onToggleComplete={handleToggleQuest}
+          onDeleteQuest={handleDeleteQuest}
           onBackToStats={() => setScreen('character_stats')}
         />
       )}

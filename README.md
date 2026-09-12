@@ -116,6 +116,14 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
 - **Single Source of Truth & LocalStorage Persistence**:
   - Updates directly apply to `PlayerState` (`LIFE_RPG_PLAYER_STATE`).
   - Rollover XP algorithm allows continuous leveling without losing extra XP.
+- **Quest Header Overflow Fix**:
+  - Entire header stays contained with `min-w-0 flex-1 truncate` on player names/emails.
+  - History and `+ ADD QUEST` action buttons are shrink-proof (`shrink-0`) and 100% visible on all screen sizes.
+- **Delete Quest & Confirmation Dialog (`DeleteQuestModal.tsx`)**:
+  - Trash button on every quest card across Today's Quests, Active Quests, and Quest History.
+  - Confirmation modal (*"Delete this quest? This quest will be permanently removed."*) with Cancel and Delete buttons.
+  - Deleting completed quests preserves awarded XP, Gold, and stats (never refunded or reversed).
+  - Deleted quests are cleanly purged from both active lists and visible Quest History.
 
 ---
 

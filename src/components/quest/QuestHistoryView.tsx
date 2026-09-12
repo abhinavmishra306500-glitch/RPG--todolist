@@ -1,14 +1,16 @@
 import React from 'react';
 import type { Quest } from '../../types/quest';
 import { QUEST_CATEGORIES, QUEST_DIFFICULTIES } from '../../types/quest';
-import { Check, Calendar, History } from 'lucide-react';
+import { Check, Calendar, History, Trash2 } from 'lucide-react';
 
 interface QuestHistoryViewProps {
   completedQuests: Quest[];
+  onRequestDelete?: (id: string) => void;
 }
 
 export const QuestHistoryView: React.FC<QuestHistoryViewProps> = ({
   completedQuests,
+  onRequestDelete,
 }) => {
   if (completedQuests.length === 0) {
     return (
@@ -72,6 +74,18 @@ export const QuestHistoryView: React.FC<QuestHistoryViewProps> = ({
                 <Check size={10} />
                 <span>Completed on {completedDateStr}</span>
               </span>
+
+              {onRequestDelete && (
+                <button
+                  type="button"
+                  onClick={() => onRequestDelete(quest.id)}
+                  className="p-1.5 bg-[#1b1219] hover:bg-rose-950/90 border border-rose-900/60 hover:border-rose-500 text-rose-400 hover:text-rose-200 text-[9px] font-pixel transition-colors shadow-[1px_1px_0_0_#000] flex items-center justify-center"
+                  title="Delete from History"
+                  aria-label={`Delete ${quest.title} from history`}
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
             </div>
           </div>
         );

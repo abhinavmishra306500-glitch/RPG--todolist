@@ -187,7 +187,10 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
         </div>
 
         {/* Character Name */}
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wider font-pixel text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-400 to-amber-600 drop-shadow-[0_3px_4px_rgba(0,0,0,0.85)]">
+        <h1
+          className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wider font-pixel text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-400 to-amber-600 drop-shadow-[0_3px_4px_rgba(0,0,0,0.85)] truncate max-w-full px-2"
+          title={player.character.name}
+        >
           {player.character.name}
         </h1>
         <p className="text-xs text-slate-300 font-medium">

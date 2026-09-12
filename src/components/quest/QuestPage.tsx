@@ -3,6 +3,7 @@ import type { Quest } from '../../types/quest';
 import type { CharacterProfile } from '../../types/character';
 import { QuestCard } from './QuestCard';
 import { QuestHistoryView } from './QuestHistoryView';
+import { DeleteQuestModal } from './DeleteQuestModal';
 import { RpgCard } from '../ui/RpgCard';
 import { PlusCircle, Sun, Swords, History, ArrowLeft, Calendar } from 'lucide-react';
 import { getTodayDateString } from '../../utils/questStorage';
@@ -13,6 +14,7 @@ interface QuestPageProps {
   quests: Quest[];
   onAddQuestClick: () => void;
   onToggleComplete: (id: string) => void;
+  onDeleteQuest: (id: string) => void;
   onBackToStats: () => void;
 }
 
@@ -24,9 +26,11 @@ export const QuestPage: React.FC<QuestPageProps> = ({
   quests,
   onAddQuestClick,
   onToggleComplete,
+  onDeleteQuest,
   onBackToStats,
 }) => {
   const [activeTab, setActiveTab] = useState<ActiveViewTab>('board');
+  const [questToDelete, setQuestToDelete] = useState<Quest | null>(null);
   const todayStr = getTodayDateString();
 
   // 1. Today's Quests: Short-term quests created for today and not archived into past days
@@ -44,35 +48,40 @@ export const QuestPage: React.FC<QuestPageProps> = ({
 
   return (
     <div className="w-full max-w-3xl mx-auto my-auto relative z-10 px-3 sm:px-4 py-4 animate-fadeIn space-y-4">
-      {/* Top Header Navigation & Hero Info Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#161327] p-3 border-2 border-[#362e58] shadow-[3px_3px_0_0_#000]">
-        <div className="flex items-center gap-3">
+      {/* Top Header Navigation & Hero Info Bar (Fully contained, responsive, and truncated) */}
+      <div className="w-full min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#161327] p-3 border-2 border-[#362e58] shadow-[3px_3px_0_0_#000]">
+        {/* Left Section: Back Button, Level, Truncated Player Name/Email */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <button
             type="button"
             onClick={onBackToStats}
-            className="px-2.5 py-1.5 bg-[#1f1a35] hover:bg-[#2c244b] border border-[#44386e] text-slate-300 text-xs font-pixel flex items-center gap-1.5 transition-colors"
+            className="px-2.5 py-1.5 bg-[#1f1a35] hover:bg-[#2c244b] border border-[#44386e] text-slate-300 text-xs font-pixel flex items-center gap-1.5 transition-colors shrink-0"
           >
             <ArrowLeft size={14} />
-            <span>Profile & Stats</span>
+            <span className="hidden sm:inline">Profile & Stats</span>
+            <span className="sm:hidden">Stats</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-amber-500/20 border border-amber-400 text-amber-300 text-[10px] font-pixel font-bold">
+          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+            <span className="px-2 py-0.5 bg-amber-500/20 border border-amber-400 text-amber-300 text-[10px] font-pixel font-bold shrink-0">
               LVL {level}
             </span>
-            <span className="text-xs font-bold text-slate-200 font-pixel">
+            <span
+              className="text-xs font-bold text-slate-200 font-pixel truncate min-w-0 block flex-1"
+              title={character.name}
+            >
               {character.name}
             </span>
           </div>
         </div>
 
-        {/* Action Controls: View Switcher & Prominent + ADD QUEST */}
-        <div className="flex items-center gap-2">
+        {/* Right Section: Action Controls (Fully preserved and shrink-proof) */}
+        <div className="flex items-center gap-2 shrink-0">
           {/* History Toggle */}
           <button
             type="button"
             onClick={() => setActiveTab(activeTab === 'board' ? 'history' : 'board')}
-            className={`px-3 py-2 border-2 text-[10px] font-pixel transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-2 border-2 text-[10px] font-pixel transition-all flex items-center gap-1.5 shrink-0 ${
               activeTab === 'history'
                 ? 'bg-purple-950 border-purple-400 text-purple-200 shadow-[2px_2px_0_0_#000]'
                 : 'bg-[#1a162e] border-[#372f56] text-slate-300 hover:text-white hover:border-slate-400'
@@ -86,7 +95,7 @@ export const QuestPage: React.FC<QuestPageProps> = ({
           <button
             type="button"
             onClick={onAddQuestClick}
-            className="px-4 py-2 bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 border-2 border-emerald-300 text-slate-950 font-pixel text-xs font-bold shadow-[3px_3px_0_0_#064e3b] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center gap-1.5"
+            className="px-3.5 sm:px-4 py-2 bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 border-2 border-emerald-300 text-slate-950 font-pixel text-xs font-bold shadow-[3px_3px_0_0_#064e3b] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center gap-1.5 shrink-0"
           >
             <PlusCircle size={15} className="text-slate-950" />
             <span>+ ADD QUEST</span>
@@ -114,7 +123,13 @@ export const QuestPage: React.FC<QuestPageProps> = ({
               </button>
             </div>
 
-            <QuestHistoryView completedQuests={completedHistoryQuests} />
+            <QuestHistoryView
+              completedQuests={completedHistoryQuests}
+              onRequestDelete={(id) => {
+                const q = quests.find((item) => item.id === id);
+                if (q) setQuestToDelete(q);
+              }}
+            />
           </div>
         </RpgCard>
       )}
@@ -162,6 +177,10 @@ export const QuestPage: React.FC<QuestPageProps> = ({
                       key={quest.id}
                       quest={quest}
                       onToggleComplete={onToggleComplete}
+                      onRequestDelete={(id) => {
+                        const q = quests.find((item) => item.id === id);
+                        if (q) setQuestToDelete(q);
+                      }}
                     />
                   ))
                 ) : (
@@ -218,6 +237,10 @@ export const QuestPage: React.FC<QuestPageProps> = ({
                       key={quest.id}
                       quest={quest}
                       onToggleComplete={onToggleComplete}
+                      onRequestDelete={(id) => {
+                        const q = quests.find((item) => item.id === id);
+                        if (q) setQuestToDelete(q);
+                      }}
                     />
                   ))
                 ) : (
@@ -240,6 +263,19 @@ export const QuestPage: React.FC<QuestPageProps> = ({
           </RpgCard>
         </div>
       )}
+
+      {/* Delete Quest Confirmation Dialog (Cancel / Delete) */}
+      <DeleteQuestModal
+        isOpen={Boolean(questToDelete)}
+        questTitle={questToDelete?.title || ''}
+        onCancel={() => setQuestToDelete(null)}
+        onConfirm={() => {
+          if (questToDelete) {
+            onDeleteQuest(questToDelete.id);
+            setQuestToDelete(null);
+          }
+        }}
+      />
     </div>
   );
 };
