@@ -54,6 +54,12 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
   - Dedicated **League Section** clearly displaying `BRONZE`.
   - 4 independent core RPG attribute cards: `INTELLIGENCE` (0), `STRENGTH` (0), `STAMINA` (0), `SKILLS` (0).
   - Dedicated `GOLD` (0 G) and `STREAK` (0 Days) tracking sections.
+  - **Living Feedback Animations & Audio**:
+    - **Full Health Heart Pulse**: Subtle repeating heartbeat pulse animation (`animate-rpg-heartbeat`) when HP is at maximum 100/100, which ceases when damaged.
+    - **Web Audio API Sound Effects**: 100% original, licensed-safe harmonic chime synthesizers (`playStatIncreaseSound` & `playLevelUpSound`) triggered on actual stat gains.
+    - **Level Up Glow**: Radiant amber pulse and celebration toast upon leveling up.
+    - **Smooth XP Bar Interpolation**: Eased transition on the XP bar as experience is gained.
+    - **Stat Number Count-Up & Highlight**: Smooth integer animation and emerald card pulse on stat increases.
   - Clean, polished player-facing UI with seamless character editing and logout controls.
 
 ---

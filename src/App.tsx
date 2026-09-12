@@ -128,6 +128,7 @@ export const App: React.FC = () => {
           initialPlayer={playerState}
           onEditCharacter={handleEditCharacter}
           onLogOut={handleLogOut}
+          isDevMode={currentRole === 'developer' || activeSession?.role === 'developer'}
         />
       )}
 
