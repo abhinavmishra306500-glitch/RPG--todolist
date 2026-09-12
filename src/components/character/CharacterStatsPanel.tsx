@@ -46,12 +46,14 @@ import {
   Terminal,
   RefreshCw,
   Skull,
+  Compass,
 } from 'lucide-react';
 
 interface CharacterStatsPanelProps {
   initialPlayer: PlayerState;
   onEditCharacter: () => void;
   onContinueToQuests?: () => void;
+  onOpenWorldMap?: () => void;
   onLogOut: () => void;
   onUpdatePlayer?: (player: PlayerState) => void;
   isDevMode?: boolean;
@@ -61,6 +63,7 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
   initialPlayer,
   onEditCharacter,
   onContinueToQuests,
+  onOpenWorldMap,
   onLogOut,
   onUpdatePlayer,
   isDevMode = true,
@@ -597,65 +600,82 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
             </div>
           </div>
 
-          {/* LEAGUE, GOLD & STREAK SECTIONS */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {/* LEAGUE, MAP, GOLD & STREAK SECTIONS */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {/* League Section (Rank & Division) */}
             {(() => {
               const visual = getLeagueVisualConfig(player.league);
               return (
                 <div
-                  className={`p-2.5 bg-[#171426] border-2 flex items-center gap-3 transition-all duration-300 ${visual.badgeBorder}`}
+                  className={`p-2.5 bg-[#171426] border-2 flex items-center gap-2.5 transition-all duration-300 ${visual.badgeBorder}`}
                   style={{ boxShadow: `0 0 10px ${visual.glowColor}` }}
                 >
                   <div
-                    className={`w-9 h-9 border-2 flex items-center justify-center shrink-0 ${visual.badgeBg} ${visual.badgeBorder}`}
+                    className={`w-8 h-8 border-2 flex items-center justify-center shrink-0 ${visual.badgeBg} ${visual.badgeBorder}`}
                   >
-                    <span className="text-xl filter drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]">
+                    <span className="text-lg filter drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]">
                       {visual.emoji}
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <span className="block text-[9px] font-pixel text-slate-400 uppercase">League</span>
-                    <span className={`text-xs font-bold font-pixel tracking-wider truncate block ${visual.badgeText}`}>
+                    <span className="block text-[8px] font-pixel text-slate-400 uppercase">League</span>
+                    <span className={`text-[11px] font-bold font-pixel tracking-wider truncate block ${visual.badgeText}`}>
                       {visual.label.toUpperCase()}
-                    </span>
-                    <span className="block text-[8px] text-slate-400 font-mono truncate">
-                      {visual.description}
                     </span>
                   </div>
                 </div>
               );
             })()}
 
+            {/* Map Level Section (Candy Crush World Progress) */}
+            <div
+              className="p-2.5 bg-[#171426] border-2 border-cyan-500/50 flex items-center gap-2.5 cursor-pointer hover:border-cyan-400 transition-colors"
+              onClick={onOpenWorldMap}
+              title="Click to explore the World Map"
+            >
+              <div className="w-8 h-8 bg-cyan-950/80 border border-cyan-400 flex items-center justify-center shrink-0">
+                <Compass size={16} className="text-cyan-300 animate-spin" style={{ animationDuration: '10s' }} />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[8px] font-pixel text-slate-400 uppercase">Map World</span>
+                <span className="text-[11px] font-bold text-cyan-300 font-pixel truncate block">
+                  LVL {player.map?.currentMapLevel || 11}
+                </span>
+                <span className="block text-[7px] text-slate-400 font-mono truncate">
+                  🥈 Silver Village
+                </span>
+              </div>
+            </div>
+
             {/* Gold Section */}
-            <div className="p-2.5 bg-[#171426] border-2 border-[#312a4f] flex items-center gap-3">
-              <div className="w-9 h-9 bg-yellow-500/20 border-2 border-yellow-500/50 flex items-center justify-center shrink-0">
-                <Coins size={18} className="text-yellow-400" />
+            <div className="p-2.5 bg-[#171426] border-2 border-[#312a4f] flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-yellow-500/20 border-2 border-yellow-500/50 flex items-center justify-center shrink-0">
+                <Coins size={16} className="text-yellow-400" />
               </div>
               <div>
-                <span className="block text-[9px] font-pixel text-slate-400 uppercase">Gold</span>
-                <span className="text-xs font-bold text-yellow-300 font-pixel">
+                <span className="block text-[8px] font-pixel text-slate-400 uppercase">Gold</span>
+                <span className="text-[11px] font-bold text-yellow-300 font-pixel">
                   <AnimatedStatNumber value={player.economy.gold} /> G
                 </span>
               </div>
             </div>
 
             {/* Streak Section */}
-            <div className="p-2.5 bg-[#171426] border-2 border-[#312a4f] flex items-center gap-3">
-              <div className="w-9 h-9 bg-orange-500/20 border-2 border-orange-500/50 flex items-center justify-center shrink-0">
-                <Flame size={18} className="text-orange-400" />
+            <div className="p-2.5 bg-[#171426] border-2 border-[#312a4f] flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-orange-500/20 border-2 border-orange-500/50 flex items-center justify-center shrink-0">
+                <Flame size={16} className="text-orange-400" />
               </div>
               <div className="min-w-0">
-                <span className="block text-[9px] font-pixel text-slate-400 uppercase">Streak</span>
-                <span className="text-xs font-bold text-orange-300 font-pixel">
+                <span className="block text-[8px] font-pixel text-slate-400 uppercase">Streak</span>
+                <span className="text-[11px] font-bold text-orange-300 font-pixel">
                   <AnimatedStatNumber value={player.consistency.streak} />{' '}
                   {player.consistency.streak === 1 ? 'Day' : 'Days'}
                 </span>
                 {(() => {
                   const nextM = getNextStreakMilestone(player.consistency.streak);
                   return (
-                    <span className="block text-[8px] text-amber-400/90 font-mono truncate">
-                      {nextM ? `Next: ${nextM} Days` : 'Max Milestone!'}
+                    <span className="block text-[7px] text-amber-400/90 font-mono truncate">
+                      {nextM ? `Next: ${nextM}d` : 'Max!'}
                     </span>
                   );
                 })()}
@@ -913,9 +933,9 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
             )}
           </div>
 
-          {/* CHARACTER STATS → QUEST PAGE: Clear CONTINUE / NEXT button */}
-          {onContinueToQuests && (
-            <div className="pt-2 border-t-2 border-[#2b2545]">
+          {/* Primary Journey Action Buttons (Quests & World Map) */}
+          <div className="pt-2 border-t-2 border-[#2b2545] grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {onContinueToQuests && (
               <RpgButton
                 type="button"
                 variant="player"
@@ -926,8 +946,22 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
               >
                 CONTINUE TO QUESTS ➔
               </RpgButton>
-            </div>
-          )}
+            )}
+
+            {onOpenWorldMap && (
+              <RpgButton
+                type="button"
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onClick={onOpenWorldMap}
+                icon={<Compass size={16} className="text-cyan-300" />}
+                className="bg-[#1b1730] border-cyan-500/60 hover:border-cyan-400 text-cyan-200"
+              >
+                🗺️ EXPLORE WORLD MAP (LVL {player.map?.currentMapLevel || 11})
+              </RpgButton>
+            )}
+          </div>
 
           {/* Secondary Action Navigation Controls */}
           <div className="grid grid-cols-2 gap-3 pt-1">

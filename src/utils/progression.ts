@@ -1,5 +1,6 @@
 import type { CharacterProfile } from '../types/character';
 import type { PlayerState, PlayerStats, LeagueTier, PlayerLeague } from '../types/progression';
+import { INITIAL_MAP_PROGRESSION } from './mapData';
 
 export const MAX_PLAYER_LEVEL = 100;
 
@@ -28,6 +29,7 @@ export const getXpThresholdForLevel = getXPRequiredForLevel;
  * - Gold starts at 0
  * - Streak starts at 0
  * - League starts at Bronze
+ * - Map starts at Level 11 in Silver Village
  */
 export const createInitialPlayerState = (character: CharacterProfile): PlayerState => {
   return {
@@ -53,6 +55,9 @@ export const createInitialPlayerState = (character: CharacterProfile): PlayerSta
       tier: 'Bronze',
       division: 'III',
       name: 'Bronze',
+    },
+    map: {
+      ...INITIAL_MAP_PROGRESSION,
     },
   };
 };

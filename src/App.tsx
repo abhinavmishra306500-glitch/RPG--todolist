@@ -23,8 +23,10 @@ import { PixelHeart, PixelSword, PixelWrench } from './components/common/PixelIc
 import { RpgOverworldBackground } from './components/environment/RpgOverworldBackground';
 import { StreakMilestoneModal } from './components/character/StreakMilestoneModal';
 import { LeagueChangeModal } from './components/character/LeagueChangeModal';
+import { WorldMapView } from './components/map/WorldMapView';
 import { getTodayDateString, applyInactivityDecay, recordDailyActivity } from './utils/streakDecay';
 import { normalizeLeague } from './utils/league';
+import { normalizeMapProgression } from './utils/mapData';
 import type { PlayerLeague } from './types/progression';
 
 const PLAYER_STORAGE_KEY = 'LIFE_RPG_PLAYER_STATE';
@@ -35,6 +37,7 @@ const loadSavedPlayerState = (): PlayerState | null => {
     if (saved) {
       const parsed: PlayerState = JSON.parse(saved);
       parsed.league = normalizeLeague(parsed.league);
+      parsed.map = normalizeMapProgression(parsed.map);
       const { updatedPlayer } = applyInactivityDecay(parsed, getTodayDateString());
       return updatedPlayer;
     }
@@ -44,7 +47,7 @@ const loadSavedPlayerState = (): PlayerState | null => {
   return null;
 };
 
-type AppScreen = 'login' | 'character_creation' | 'character_created' | 'character_stats' | 'quest_page';
+type AppScreen = 'login' | 'character_creation' | 'character_created' | 'character_stats' | 'quest_page' | 'world_map';
 
 export const App: React.FC = () => {
   const [screen, setScreen] = useState<AppScreen>('login');
@@ -306,6 +309,7 @@ export const App: React.FC = () => {
           initialPlayer={playerState}
           onEditCharacter={handleEditCharacter}
           onContinueToQuests={() => setScreen('quest_page')}
+          onOpenWorldMap={() => setScreen('world_map')}
           onLogOut={handleLogOut}
           onUpdatePlayer={setPlayerState}
           isDevMode={currentRole === 'developer' || activeSession?.role === 'developer'}
@@ -322,10 +326,23 @@ export const App: React.FC = () => {
           onToggleComplete={handleToggleQuest}
           onDeleteQuest={handleDeleteQuest}
           onBackToStats={() => setScreen('character_stats')}
+          onOpenWorldMap={() => setScreen('world_map')}
         />
       )}
 
-      {/* --- SCREEN 5: LOGIN PAGE (Preserved 100%) --- */}
+      {/* --- SCREEN 5: WORLD MAP & CANDY CRUSH PROGRESSION (STEP 9) --- */}
+      {screen === 'world_map' && playerState && (
+        <div className="fixed inset-0 w-screen h-screen z-50 bg-slate-950 overflow-hidden">
+          <WorldMapView
+            player={playerState}
+            onUpdatePlayer={setPlayerState}
+            onBackToStats={() => setScreen('character_stats')}
+            onOpenQuests={() => setScreen('quest_page')}
+          />
+        </div>
+      )}
+
+      {/* --- SCREEN 6: LOGIN PAGE (Preserved 100%) --- */}
       {screen === 'login' && (
         <main className="w-full max-w-md mx-auto my-auto relative z-10">
           {/* Game Title & Header */}
@@ -391,6 +408,18 @@ export const App: React.FC = () => {
                       className="w-full py-2 bg-indigo-600/30 hover:bg-indigo-600/50 border-2 border-indigo-400 text-indigo-200 text-xs font-pixel rounded-none transition-colors"
                     >
                       📜 Test Dedicated Quest Page (Dev Mode)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!playerState) {
+                          setPlayerState(createInitialPlayerState(characterProfile || DEFAULT_CHARACTER));
+                        }
+                        setScreen('world_map');
+                      }}
+                      className="w-full py-2 bg-slate-700/60 hover:bg-slate-700/80 border-2 border-slate-400 text-slate-200 text-xs font-pixel rounded-none transition-colors"
+                    >
+                      🗺️ Test World Map & Movement (Dev Mode)
                     </button>
                   </div>
                 )}

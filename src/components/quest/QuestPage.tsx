@@ -5,7 +5,7 @@ import { QuestCard } from './QuestCard';
 import { QuestHistoryView } from './QuestHistoryView';
 import { DeleteQuestModal } from './DeleteQuestModal';
 import { RpgCard } from '../ui/RpgCard';
-import { PlusCircle, Sun, Swords, History, ArrowLeft, Calendar } from 'lucide-react';
+import { PlusCircle, Sun, Swords, History, ArrowLeft, Calendar, Compass } from 'lucide-react';
 import { getTodayDateString } from '../../utils/questStorage';
 
 interface QuestPageProps {
@@ -16,6 +16,7 @@ interface QuestPageProps {
   onToggleComplete: (id: string) => void;
   onDeleteQuest: (id: string) => void;
   onBackToStats: () => void;
+  onOpenWorldMap?: () => void;
 }
 
 type ActiveViewTab = 'board' | 'history';
@@ -28,6 +29,7 @@ export const QuestPage: React.FC<QuestPageProps> = ({
   onToggleComplete,
   onDeleteQuest,
   onBackToStats,
+  onOpenWorldMap,
 }) => {
   const [activeTab, setActiveTab] = useState<ActiveViewTab>('board');
   const [questToDelete, setQuestToDelete] = useState<Quest | null>(null);
@@ -77,6 +79,18 @@ export const QuestPage: React.FC<QuestPageProps> = ({
 
         {/* Right Section: Action Controls (Fully preserved and shrink-proof) */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* World Map Navigation */}
+          {onOpenWorldMap && (
+            <button
+              type="button"
+              onClick={onOpenWorldMap}
+              className="px-2.5 sm:px-3 py-2 bg-[#1b1730] hover:bg-[#282247] border-2 border-cyan-500/60 hover:border-cyan-400 text-cyan-200 text-[10px] font-pixel flex items-center gap-1.5 shrink-0 transition-colors shadow-[2px_2px_0_0_#000]"
+            >
+              <Compass size={13} className="text-cyan-300" />
+              <span>Map</span>
+            </button>
+          )}
+
           {/* History Toggle */}
           <button
             type="button"

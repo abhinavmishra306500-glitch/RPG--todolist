@@ -1,4 +1,5 @@
 import type { CharacterProfile } from './character';
+import type { MapProgressionState } from './map';
 
 export type LeagueTier = 'Bronze' | 'Silver' | 'Gold' | 'Diamond' | 'Mythical';
 export type LeagueDivision = 'III' | 'II' | 'I';
@@ -41,6 +42,7 @@ export interface PlayerState {
   economy: PlayerEconomy;
   consistency: PlayerConsistency;
   league: PlayerLeague;
+  map?: MapProgressionState;
 }
 
 export interface LeagueConfig {
