@@ -176,6 +176,7 @@ export const QuestPage: React.FC<QuestPageProps> = ({
                     <QuestCard
                       key={quest.id}
                       quest={quest}
+                      playerLevel={level}
                       onToggleComplete={onToggleComplete}
                       onRequestDelete={(id) => {
                         const q = quests.find((item) => item.id === id);
@@ -236,6 +237,7 @@ export const QuestPage: React.FC<QuestPageProps> = ({
                     <QuestCard
                       key={quest.id}
                       quest={quest}
+                      playerLevel={level}
                       onToggleComplete={onToggleComplete}
                       onRequestDelete={(id) => {
                         const q = quests.find((item) => item.id === id);

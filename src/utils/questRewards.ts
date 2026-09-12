@@ -8,9 +8,10 @@ import {
 } from './progression';
 
 export interface QuestReward {
-  xp: number; // Overall character XP
-  gold: number; // In-game currency
-  attributeAmount: number; // Amount added to specific stat / skill XP
+  xp: number; // Final Overall character XP (after level multiplier)
+  baseXp?: number; // Base Overall XP before diminishing multiplier
+  gold: number; // In-game currency (NOT diminished)
+  attributeAmount: number; // Amount added to specific stat / skill XP (NOT diminished)
   attributeName: string; // e.g. "Intelligence", "Strength", "Stamina", "Skill XP", "Health"
   attributeKey: keyof PlayerStats;
   isSkillXp: boolean;
@@ -18,39 +19,55 @@ export interface QuestReward {
 }
 
 /**
- * Calculates the exact reward bundle based on quest type, difficulty, and category.
+ * Calculates the diminishing Overall XP multiplier based on player level.
+ * Multiplier formula: 1 / (1 + ((level - 1) * 0.05))
+ * - Level 1: 1.0 (100% XP)
+ * - Level 10: ~0.6897 (~69% XP)
+ * - Level 20: ~0.5128 (~51% XP)
+ * - Level 50: ~0.2899 (~29% XP)
+ * - Level 100: ~0.1681 (~17% XP)
+ * Applies ONLY to Overall XP. Never reduces Gold, Attributes, or Skill XP.
+ */
+export const getXpMultiplierForLevel = (level: number): number => {
+  const safeLevel = Math.max(1, Math.floor(level));
+  return 1 / (1 + (safeLevel - 1) * 0.05);
+};
+
+/**
+ * Calculates the exact reward bundle based on quest type, difficulty, category,
+ * and the player's current level.
  *
  * TODAY'S QUESTS:
- * - Easy: +50 XP, +2 Attribute/Skill XP, +10 Gold
- * - Medium: +100 XP, +5 Attribute/Skill XP, +20 Gold
- * - Hard: +200 XP, +10 Attribute/Skill XP, +40 Gold
+ * - Easy: Base +50 XP, +2 Attribute/Skill XP, +10 Gold
+ * - Medium: Base +100 XP, +5 Attribute/Skill XP, +20 Gold
+ * - Hard: Base +200 XP, +10 Attribute/Skill XP, +40 Gold
  *
  * ACTIVE QUESTS:
- * - Easy: +300 XP, +10 Attribute/Skill XP, +75 Gold
- * - Medium: +600 XP, +20 Attribute/Skill XP, +150 Gold
- * - Hard: +1000 XP, +35 Attribute/Skill XP, +300 Gold
+ * - Easy: Base +300 XP, +10 Attribute/Skill XP, +75 Gold
+ * - Medium: Base +600 XP, +20 Attribute/Skill XP, +150 Gold
+ * - Hard: Base +1000 XP, +35 Attribute/Skill XP, +300 Gold
  */
-export const calculateQuestReward = (quest: Quest): QuestReward => {
+export const calculateQuestReward = (quest: Quest, playerLevel: number = 1): QuestReward => {
   const isToday = quest.questType === 'today';
 
-  let xp = 0;
+  let baseXp = 0;
   let attributeAmount = 0;
   let gold = 0;
 
   if (isToday) {
     switch (quest.difficulty) {
       case 'easy':
-        xp = 50;
+        baseXp = 50;
         attributeAmount = 2;
         gold = 10;
         break;
       case 'medium':
-        xp = 100;
+        baseXp = 100;
         attributeAmount = 5;
         gold = 20;
         break;
       case 'hard':
-        xp = 200;
+        baseXp = 200;
         attributeAmount = 10;
         gold = 40;
         break;
@@ -59,22 +76,26 @@ export const calculateQuestReward = (quest: Quest): QuestReward => {
     // Active (Long-term multi-day quests)
     switch (quest.difficulty) {
       case 'easy':
-        xp = 300;
+        baseXp = 300;
         attributeAmount = 10;
         gold = 75;
         break;
       case 'medium':
-        xp = 600;
+        baseXp = 600;
         attributeAmount = 20;
         gold = 150;
         break;
       case 'hard':
-        xp = 1000;
+        baseXp = 1000;
         attributeAmount = 35;
         gold = 300;
         break;
     }
   }
+
+  // Apply level-based diminishing Overall XP multiplier (rounded to nearest whole number)
+  const multiplier = getXpMultiplierForLevel(playerLevel);
+  const finalXp = Math.round(baseXp * multiplier);
 
   let attributeName = '';
   let attributeKey: keyof PlayerStats = 'intelligence';
@@ -95,7 +116,7 @@ export const calculateQuestReward = (quest: Quest): QuestReward => {
     case 'stamina':
       attributeName = 'Stamina';
       attributeKey = 'stamina';
-      categoryIcon = '🏃';
+      categoryIcon = '⚡';
       break;
     case 'skills':
       attributeName = 'Skill XP';
@@ -111,7 +132,8 @@ export const calculateQuestReward = (quest: Quest): QuestReward => {
   }
 
   return {
-    xp,
+    xp: finalXp,
+    baseXp,
     gold,
     attributeAmount,
     attributeName,

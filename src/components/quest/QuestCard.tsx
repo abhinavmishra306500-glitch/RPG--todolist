@@ -8,12 +8,14 @@ import { Check, Clock, AlertTriangle, Sparkles, RotateCcw, Zap, Coins, Trash2 } 
 
 interface QuestCardProps {
   quest: Quest;
+  playerLevel?: number;
   onToggleComplete: (id: string) => void;
   onRequestDelete?: (id: string) => void;
 }
 
 export const QuestCard: React.FC<QuestCardProps> = ({
   quest,
+  playerLevel = 1,
   onToggleComplete,
   onRequestDelete,
 }) => {
@@ -36,7 +38,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({
 
   const categoryConfig = QUEST_CATEGORIES[quest.category] || QUEST_CATEGORIES.intelligence;
   const difficultyConfig = QUEST_DIFFICULTIES[quest.difficulty] || QUEST_DIFFICULTIES.medium;
-  const reward = calculateQuestReward(quest);
+  const reward = calculateQuestReward(quest, playerLevel);
 
   const isExpired = remainingText === 'EXPIRED';
 

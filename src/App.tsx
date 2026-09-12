@@ -152,7 +152,8 @@ export const App: React.FC = () => {
 
     // Case 1: First time completion -> Award XP, Gold, Attribute / Skill XP with progression checks
     if (!questToToggle.completed && !questToToggle.rewardClaimed) {
-      const reward = calculateQuestReward(questToToggle);
+      const currentLevel = playerState?.progression.level || 1;
+      const reward = calculateQuestReward(questToToggle, currentLevel);
       const activePlayer = playerState || createInitialPlayerState(characterProfile || DEFAULT_CHARACTER);
       const { updatedPlayer, leveledUp } = applyQuestRewardToPlayer(activePlayer, reward);
 
@@ -368,10 +369,10 @@ export const App: React.FC = () => {
       {/* Semantic Accessible Footer */}
       <footer className="w-full text-center mt-6 text-xs text-slate-200 relative z-10 select-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
         <p className="font-pixel text-[9px] text-slate-900 tracking-wider font-bold">
-          Life RPG • Step 5: Quest Completion Rewards & Progression
+          Life RPG • Step 6: Attributes + XP + Level Progression
         </p>
         <p className="text-[10px] text-slate-800 font-medium mt-1">
-          Complete quests to earn XP, Gold, Attribute bonuses, and Skill XP with level progression.
+          Non-linear scaling, level-diminishing XP returns, and Level 100 mastery.
         </p>
       </footer>
 

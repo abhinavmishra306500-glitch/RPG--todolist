@@ -1,14 +1,23 @@
 import type { CharacterProfile } from '../types/character';
 import type { PlayerState, PlayerStats, LeagueTier } from '../types/progression';
 
+export const MAX_PLAYER_LEVEL = 100;
+
 /**
- * Calculates the XP required to complete the given level and advance to the next level.
- * Level 1 requires 100 XP, Level 2 requires 200 XP, Level 3 requires 300 XP, etc.
+ * Calculates the XP required to advance from the current level to the next level.
+ * Formula: 100 * level^1.5 (rounded to whole number)
+ * - Level 1: 100 XP required
+ * - Level 2: ~283 XP required
+ * - Level 3: ~520 XP required
+ * - Level 10: ~3162 XP required
  */
-export const getXpThresholdForLevel = (level: number): number => {
+export const getXPRequiredForLevel = (level: number): number => {
   const safeLevel = Math.max(1, Math.floor(level));
-  return safeLevel * 100;
+  return Math.round(100 * Math.pow(safeLevel, 1.5));
 };
+
+// Backwards-compatible alias for existing imports
+export const getXpThresholdForLevel = getXPRequiredForLevel;
 
 /**
  * Creates the initial PlayerState with all Step 3 baseline values.
@@ -50,23 +59,29 @@ export const createInitialPlayerState = (character: CharacterProfile): PlayerSta
  * Computes level progression metrics from current level and current XP.
  */
 export const calculateProgressMetrics = (level: number, xp: number) => {
-  const safeLevel = Math.max(1, level);
-  const safeXp = Math.max(0, xp);
-  const requiredXp = getXpThresholdForLevel(safeLevel);
-  const progressPercent = Math.min(100, Math.round((safeXp / requiredXp) * 100));
+  const safeLevel = Math.max(1, Math.min(MAX_PLAYER_LEVEL, Math.floor(level)));
+  const isMaxLevel = safeLevel >= MAX_PLAYER_LEVEL;
+  const requiredXp = getXPRequiredForLevel(safeLevel);
+  const safeXp = isMaxLevel ? requiredXp : Math.max(0, xp);
+  const progressPercent = isMaxLevel
+    ? 100
+    : Math.min(100, Math.max(0, Math.round((safeXp / requiredXp) * 100)));
 
   return {
     level: safeLevel,
-    currentXp: safeXp,
+    currentXp: isMaxLevel ? requiredXp : Math.max(0, xp),
     requiredXp,
     progressPercent,
+    isMaxLevel,
   };
 };
 
 /**
- * Adds XP to the player and handles level-up thresholds.
- * XP carries over into subsequent levels if it exceeds the threshold.
- * Level never drops below 1. XP is earned, not spent.
+ * Adds Overall XP to the player and handles non-linear level-up thresholds and rollovers.
+ * - XP carries over into subsequent levels if it exceeds the threshold.
+ * - Multi-level jumps are accurately processed.
+ * - Level is capped at MAX_PLAYER_LEVEL (100).
+ * - Level never drops below 1. XP is earned, not spent.
  */
 export const addPlayerXp = (
   player: PlayerState,
@@ -76,15 +91,38 @@ export const addPlayerXp = (
     return { updatedPlayer: player, leveledUp: false, levelsGained: 0 };
   }
 
-  let currentLevel = Math.max(1, player.progression.level);
-  let currentXp = Math.max(0, player.progression.xp) + amount;
+  let currentLevel = Math.max(1, Math.min(MAX_PLAYER_LEVEL, player.progression.level));
+  let currentXp = Math.max(0, player.progression.xp);
   let levelsGained = 0;
 
-  // Level up loop if XP meets or exceeds the required threshold
-  while (currentXp >= getXpThresholdForLevel(currentLevel)) {
-    currentXp -= getXpThresholdForLevel(currentLevel);
+  // If already at Max Level (100), do not advance further
+  if (currentLevel >= MAX_PLAYER_LEVEL) {
+    return {
+      updatedPlayer: {
+        ...player,
+        progression: {
+          level: MAX_PLAYER_LEVEL,
+          xp: getXPRequiredForLevel(MAX_PLAYER_LEVEL),
+        },
+      },
+      leveledUp: false,
+      levelsGained: 0,
+    };
+  }
+
+  currentXp += amount;
+
+  // Level up loop with rollover
+  while (currentLevel < MAX_PLAYER_LEVEL && currentXp >= getXPRequiredForLevel(currentLevel)) {
+    currentXp -= getXPRequiredForLevel(currentLevel);
     currentLevel += 1;
     levelsGained += 1;
+  }
+
+  // If reached Level 100 cap
+  if (currentLevel >= MAX_PLAYER_LEVEL) {
+    currentLevel = MAX_PLAYER_LEVEL;
+    currentXp = getXPRequiredForLevel(MAX_PLAYER_LEVEL);
   }
 
   const updatedPlayer: PlayerState = {

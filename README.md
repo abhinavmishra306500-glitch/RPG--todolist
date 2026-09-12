@@ -125,6 +125,37 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
   - Deleting completed quests preserves awarded XP, Gold, and stats (never refunded or reversed).
   - Deleted quests are cleanly purged from both active lists and visible Quest History.
 
+### ✅ Step 6: Attributes + XP + Level Progression
+- **Non-Linear Leveling Formula (`getXPRequiredForLevel`)**:
+  - Level thresholds dynamically scale using: `XP Required = 100 × level^1.5` (rounded to nearest integer).
+  - Progression benchmarks:
+    - Level 1: `100 XP`
+    - Level 2: `283 XP`
+    - Level 3: `520 XP`
+    - Level 10: `3,162 XP`
+    - Level 50: `35,355 XP`
+    - Level 100: `100,000 XP`
+- **Diminishing Overall XP Returns at Higher Levels**:
+  - Scaled multiplier: `XP Multiplier = 1 / (1 + ((level - 1) × 0.05))`
+  - Applied to Base Overall XP based on current player level:
+    - Level 1: `100%` (Base 100 ➔ 100 XP)
+    - Level 10: `~69%` (Base 100 ➔ 69 XP)
+    - Level 20: `~51%` (Base 100 ➔ 51 XP)
+    - Level 50: `~29%` (Base 100 ➔ 29 XP)
+    - Level 100: `~17%` (Base 100 ➔ 17 XP)
+- **Undiminished Attribute, Gold, and Skill XP Rewards**:
+  - Only Overall XP uses the diminishing multiplier.
+  - Gold, Intelligence, Strength, Stamina (⚡), Health (❤️), and Skill XP (🛠) retain 100% full values regardless of character level.
+- **Skill XP vs Overall XP Separation**:
+  - 🛠 **Skill XP** is an independent progression tracker for coding and craft quests (`player.stats.skills`).
+  - Overall XP exclusively dictates character Level advancements.
+- **Continuous Multi-Level Rollover & Level 100 Mastery Cap**:
+  - Excess XP rolls over into subsequent levels without loss.
+  - Character level strictly caps at Level 100; quests and attributes continue to be earned without advancing to Level 101.
+- **Full Feedback Animations & Audio for All Stats**:
+  - Smooth integer counters and card highlight pulses for Intelligence (cyan) and Skill XP (purple), matching Strength, Stamina, Health, and Level Up.
+  - XP Progress bar displays current level requirements and renders `MAX LEVEL (100)` at level 100.
+
 ---
 
 ## 🛠️ Tech Stack

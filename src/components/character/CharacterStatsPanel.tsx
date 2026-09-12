@@ -48,6 +48,8 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
     strength?: boolean;
     stamina?: boolean;
     health?: boolean;
+    intelligence?: boolean;
+    skillXp?: boolean;
   }>({});
   const [levelUpToast, setLevelUpToast] = useState(false);
 
@@ -58,6 +60,8 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
     health: player.stats.health,
     strength: player.stats.strength,
     stamina: player.stats.stamina,
+    intelligence: player.stats.intelligence,
+    skills: player.stats.skills,
   });
   const isFirstRender = useRef(true);
 
@@ -79,26 +83,37 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
     const currentHealth = player.stats.health;
     const currentStrength = player.stats.strength;
     const currentStamina = player.stats.stamina;
+    const currentIntelligence = player.stats.intelligence;
+    const currentSkills = player.stats.skills;
 
     const levelIncreased = currentLevel > prev.level;
     const xpIncreased = currentXp > prev.xp || levelIncreased;
     const healthIncreased = currentHealth > prev.health;
     const strengthIncreased = currentStrength > prev.strength;
     const staminaIncreased = currentStamina > prev.stamina;
+    const intelligenceIncreased = currentIntelligence > prev.intelligence;
+    const skillXpIncreased = currentSkills > prev.skills;
 
-    // 3. Level up feedback
+    // Level up feedback
     if (levelIncreased) {
       playLevelUpSound();
       setLevelUpGlow(true);
       setLevelUpToast(true);
       setTimeout(() => setLevelUpGlow(false), 1500);
       setTimeout(() => setLevelUpToast(false), 2400);
-    } else if (xpIncreased || healthIncreased || strengthIncreased || staminaIncreased) {
-      // 2. Short, satisfying RPG-style stat increased sound
+    } else if (
+      xpIncreased ||
+      healthIncreased ||
+      strengthIncreased ||
+      staminaIncreased ||
+      intelligenceIncreased ||
+      skillXpIncreased
+    ) {
+      // Short, satisfying RPG-style stat increased sound
       playStatIncreaseSound();
     }
 
-    // 5. Stat card visual highlight pulse
+    // Stat card visual highlight pulse
     if (strengthIncreased) {
       setActivePulseStat((p) => ({ ...p, strength: true }));
       setTimeout(() => setActivePulseStat((p) => ({ ...p, strength: false })), 1200);
@@ -111,6 +126,14 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
       setActivePulseStat((p) => ({ ...p, health: true }));
       setTimeout(() => setActivePulseStat((p) => ({ ...p, health: false })), 1200);
     }
+    if (intelligenceIncreased) {
+      setActivePulseStat((p) => ({ ...p, intelligence: true }));
+      setTimeout(() => setActivePulseStat((p) => ({ ...p, intelligence: false })), 1200);
+    }
+    if (skillXpIncreased) {
+      setActivePulseStat((p) => ({ ...p, skillXp: true }));
+      setTimeout(() => setActivePulseStat((p) => ({ ...p, skillXp: false })), 1200);
+    }
 
     // Update previous values ref
     prevStatsRef.current = {
@@ -119,6 +142,8 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
       health: currentHealth,
       strength: currentStrength,
       stamina: currentStamina,
+      intelligence: currentIntelligence,
+      skills: currentSkills,
     };
   }, [
     player.progression.level,
@@ -126,6 +151,8 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
     player.stats.health,
     player.stats.strength,
     player.stats.stamina,
+    player.stats.intelligence,
+    player.stats.skills,
   ]);
 
   // Keyboard shortcut listener to easily test feedback effects
@@ -225,7 +252,7 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
                         : 'bg-amber-500/20 border-amber-400 text-amber-300'
                     }`}
                   >
-                    LVL {player.progression.level}
+                    LVL {player.progression.level} {metrics.isMaxLevel ? '(MAX)' : ''}
                   </span>
                 </div>
               </div>
@@ -266,7 +293,13 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
                     <span>XP PROGRESS</span>
                   </span>
                   <span className="text-cyan-300 font-bold tracking-wider">
-                    <AnimatedStatNumber value={metrics.currentXp} /> / {metrics.requiredXp} XP
+                    {metrics.isMaxLevel ? (
+                      <span className="text-amber-300 font-pixel">MAX LEVEL (100)</span>
+                    ) : (
+                      <>
+                        <AnimatedStatNumber value={metrics.currentXp} /> / {metrics.requiredXp} XP
+                      </>
+                    )}
                   </span>
                 </div>
                 {/* Large Smooth XP Progress Bar */}
@@ -276,7 +309,7 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
                     style={{ width: `${metrics.progressPercent}%` }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center text-[10px] font-pixel text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] select-none">
-                    {metrics.progressPercent}%
+                    {metrics.isMaxLevel ? 'MAX (100%)' : `${metrics.progressPercent}%`}
                   </div>
                 </div>
               </div>
@@ -337,8 +370,14 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {/* Intelligence */}
-              <div className="p-2.5 bg-[#12101e] border-2 border-[#2b2545] hover:border-cyan-500/50 transition-colors">
+              {/* Intelligence (Smooth count-up & highlight pulse on increase) */}
+              <div
+                className={`p-2.5 bg-[#12101e] border-2 transition-all duration-300 ${
+                  activePulseStat.intelligence
+                    ? 'animate-stat-pulse border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)]'
+                    : 'border-[#2b2545] hover:border-cyan-500/50'
+                }`}
+              >
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-6 h-6 bg-cyan-950/60 border border-cyan-500/40 flex items-center justify-center">
                     <Brain size={13} className="text-cyan-400" />
@@ -403,8 +442,14 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
                 </div>
               </div>
 
-              {/* Skills / Skill XP */}
-              <div className="p-2.5 bg-[#12101e] border-2 border-[#2b2545] hover:border-purple-500/50 transition-colors">
+              {/* Skills / Skill XP (Smooth count-up & highlight pulse on increase) */}
+              <div
+                className={`p-2.5 bg-[#12101e] border-2 transition-all duration-300 ${
+                  activePulseStat.skillXp
+                    ? 'animate-stat-pulse border-purple-400 shadow-[0_0_12px_rgba(192,132,252,0.5)]'
+                    : 'border-[#2b2545] hover:border-purple-500/50'
+                }`}
+              >
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-6 h-6 bg-purple-950/60 border border-purple-500/40 flex items-center justify-center">
                     <Wrench size={13} className="text-purple-400" />
