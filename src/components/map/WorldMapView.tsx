@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { PlayerState } from '../../types/progression';
 import type { MapLevelDef, MapWorldDef } from '../../types/map';
 import {
@@ -18,6 +18,8 @@ import { useCharacterMovement } from './useCharacterMovement';
 import {
   playQuestCompleteSound,
   playStatIncreaseSound,
+  startForestAmbience,
+  stopForestAmbience,
 } from '../../utils/soundEffects';
 import {
   ArrowLeft,
@@ -26,6 +28,8 @@ import {
   MapPin,
   ChevronRight,
   Layers,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface WorldMapViewProps {
@@ -52,6 +56,19 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
   // Selected level modal
   const [selectedLevelNode, setSelectedLevelNode] = useState<MapLevelDef | null>(null);
   const [showWorldSelector, setShowWorldSelector] = useState(false);
+  const [isSoundOn, setIsSoundOn] = useState(true);
+
+  // Forest Ambience Sound Loop
+  useEffect(() => {
+    if (isSoundOn && selectedWorld.id === 'bronze-village') {
+      startForestAmbience(0.08);
+    } else {
+      stopForestAmbience();
+    }
+    return () => {
+      stopForestAmbience();
+    };
+  }, [isSoundOn, selectedWorld.id]);
 
   // Level Definition for current player map position
   const currentLevelDef = getMapLevelDef(mapProgression.currentMapLevel);
@@ -147,8 +164,26 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
           </div>
         </div>
 
-        {/* Top-Right World Selector */}
+        {/* Top-Right Controls */}
         <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Ambient Sound Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setIsSoundOn(!isSoundOn)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 shadow-2xl transition-all active:scale-95 text-xs font-black ${
+              isSoundOn
+                ? 'bg-gradient-to-b from-emerald-800 to-emerald-950 text-emerald-300 border-emerald-500'
+                : 'bg-gradient-to-b from-slate-800 to-slate-950 text-slate-400 border-slate-700'
+            }`}
+            title={isSoundOn ? 'Mute Forest Sound' : 'Play Forest Sound'}
+          >
+            {isSoundOn ? (
+              <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-slate-500" />
+            )}
+          </button>
+
           {/* World Selector Button */}
           <button
             type="button"

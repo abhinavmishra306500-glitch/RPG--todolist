@@ -266,4 +266,125 @@ export const playLeagueDemotedSound = () => {
   }
 };
 
+/**
+ * Procedural Forest Ambient Sound Engine (Web Audio API)
+ * Synthesizes peaceful forest wind breeze, gentle leaves rustle, and intermittent birds chirping.
+ */
+let forestWindSource: AudioBufferSourceNode | null = null;
+let forestWindGain: GainNode | null = null;
+let birdChirpInterval: number | null = null;
+
+export const playBirdChirp = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    const baseFreq = 2200 + Math.random() * 800; // High melodious pitch (2200-3000Hz)
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.4, now + 0.06);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.9, now + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.18);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.8, now + 0.25);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.04, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.30);
+  } catch {
+    // Graceful fallback
+  }
+};
+
+export const startForestAmbience = (volume: number = 0.08) => {
+  stopForestAmbience();
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    // 1. Create a 4-second pink noise buffer for soft leaf breeze
+    const bufferSize = ctx.sampleRate * 4;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
+      b6 = white * 0.115926;
+    }
+
+    // 2. Loop the wind buffer through a low-pass filter
+    forestWindSource = ctx.createBufferSource();
+    forestWindSource.buffer = buffer;
+    forestWindSource.loop = true;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, ctx.currentTime);
+
+    forestWindGain = ctx.createGain();
+    forestWindGain.gain.setValueAtTime(0.001, ctx.currentTime);
+    forestWindGain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 1.5);
+
+    forestWindSource.connect(filter);
+    filter.connect(forestWindGain);
+    forestWindGain.connect(ctx.destination);
+
+    forestWindSource.start(0);
+
+    // 3. Periodic natural bird chirps
+    birdChirpInterval = window.setInterval(() => {
+      if (Math.random() > 0.3) {
+        playBirdChirp();
+        // Occasional double chirp
+        if (Math.random() > 0.5) {
+          setTimeout(() => playBirdChirp(), 350);
+        }
+      }
+    }, 4500);
+  } catch {
+    // Graceful fallback
+  }
+};
+
+export const stopForestAmbience = () => {
+  if (forestWindGain && audioCtx) {
+    try {
+      forestWindGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+      setTimeout(() => {
+        if (forestWindSource) {
+          try {
+            forestWindSource.stop();
+            forestWindSource.disconnect();
+          } catch {}
+          forestWindSource = null;
+        }
+      }, 850);
+    } catch {}
+  }
+
+  if (birdChirpInterval !== null) {
+    clearInterval(birdChirpInterval);
+    birdChirpInterval = null;
+  }
+};
+
+
 
