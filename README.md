@@ -33,4 +33,3 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
    ```bash
    npm run build
    ```
-
