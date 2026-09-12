@@ -386,5 +386,1204 @@ export const stopForestAmbience = () => {
   }
 };
 
+/**
+ * 🥈 Procedural Silver Village Fantasy Soundtrack & River Ambience (Web Audio API)
+ * Peaceful, magical, warm fantasy village theme with harp arpeggios, flute melodies,
+ * soft crystal chimes, and a gentle flowing river stream underneath.
+ * 100% original, copyright-free, zero external audio assets.
+ */
+let silverRiverSource: AudioBufferSourceNode | null = null;
+let silverRiverGain: GainNode | null = null;
+let silverMusicInterval: number | null = null;
+let isSilverMusicPlaying = false;
+
+// D Major / B Minor Fantasy Village Pentatonic & Diatonic Melody Notes (Hz)
+const SILVER_MELODIES = [
+  // Phrase 1: Peaceful Village Morning (D - F# - A - B - A - F# - E - D)
+  [
+    { f: 587.33, d: 0.5, t: 0 },    // D5
+    { f: 739.99, d: 0.5, t: 0.6 },  // F#5
+    { f: 880.00, d: 0.8, t: 1.2 },  // A5
+    { f: 987.77, d: 0.6, t: 2.1 },  // B5
+    { f: 880.00, d: 0.6, t: 2.8 },  // A5
+    { f: 739.99, d: 0.5, t: 3.5 },  // F#5
+    { f: 659.25, d: 0.6, t: 4.1 },  // E5
+    { f: 587.33, d: 1.2, t: 4.8 },  // D5
+  ],
+  // Phrase 2: Flowing Water & Windmill Breeze (G - B - D - E - D - B - A)
+  [
+    { f: 783.99, d: 0.6, t: 0 },    // G5
+    { f: 987.77, d: 0.6, t: 0.7 },  // B5
+    { f: 1174.66, d: 0.9, t: 1.4 }, // D6
+    { f: 1318.51, d: 0.6, t: 2.4 }, // E6
+    { f: 1174.66, d: 0.7, t: 3.1 }, // D6
+    { f: 987.77, d: 0.6, t: 3.9 },  // B5
+    { f: 880.00, d: 1.2, t: 4.6 },  // A5
+  ],
+  // Phrase 3: Village Plaza & Mountain Waterfall (A - C# - E - F# - E - D)
+  [
+    { f: 880.00, d: 0.5, t: 0 },    // A5
+    { f: 1108.73, d: 0.5, t: 0.6 }, // C#6
+    { f: 1318.51, d: 0.9, t: 1.2 }, // E6
+    { f: 1479.98, d: 0.7, t: 2.2 }, // F#6
+    { f: 1318.51, d: 0.6, t: 3.0 }, // E6
+    { f: 1174.66, d: 0.6, t: 3.7 }, // D6
+    { f: 880.00, d: 1.3, t: 4.4 },  // A5
+  ],
+];
+
+// Warm Diatonic Pad Chords (D, G, Bm, A)
+const SILVER_CHORDS = [
+  [293.66, 369.99, 440.00], // D Major (D4, F#4, A4)
+  [392.00, 493.88, 587.33], // G Major (G4, B4, D5)
+  [246.94, 293.66, 369.99], // B Minor (B3, D4, F#4)
+  [220.00, 277.18, 329.63], // A Major (A3, C#4, E4)
+];
+
+let phraseIndex = 0;
+
+export const playSilverMusicPhrase = () => {
+  const ctx = getAudioContext();
+  if (!ctx || !isSilverMusicPlaying) return;
+
+  try {
+    const now = ctx.currentTime;
+    const phrase = SILVER_MELODIES[phraseIndex % SILVER_MELODIES.length];
+    const chord = SILVER_CHORDS[phraseIndex % SILVER_CHORDS.length];
+    phraseIndex++;
+
+    // 1. Play Soft Warm Pad Chord
+    chord.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(480, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.02, now + 1.2);
+      gain.gain.linearRampToValueAtTime(0.015, now + 4.5);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 6.0);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 6.1);
+    });
+
+    // 2. Play Melodic Flute/Harp Notes
+    phrase.forEach(({ f, d, t }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + t);
+
+      // Add gentle vibrato
+      const vibrato = ctx.createOscillator();
+      const vibratoGain = ctx.createGain();
+      vibrato.frequency.value = 5.5; // 5.5Hz vibrato
+      vibratoGain.gain.value = 3.5;
+      vibrato.connect(osc.frequency);
+      vibrato.start(now + t);
+      vibrato.stop(now + t + d + 0.3);
+
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.linearRampToValueAtTime(0.035, now + t + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + d + 0.25);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + t);
+      osc.stop(now + t + d + 0.3);
+    });
+
+    // 3. Occasional Crystal Bell Chime Overtones
+    if (Math.random() > 0.4) {
+      const chimeOsc = ctx.createOscillator();
+      const chimeGain = ctx.createGain();
+
+      chimeOsc.type = 'sine';
+      chimeOsc.frequency.setValueAtTime(2349.32, now + 2.0); // D7 high bell
+
+      chimeGain.gain.setValueAtTime(0.0001, now + 2.0);
+      chimeGain.gain.linearRampToValueAtTime(0.015, now + 2.02);
+      chimeGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+
+      chimeOsc.connect(chimeGain);
+      chimeGain.connect(ctx.destination);
+
+      chimeOsc.start(now + 2.0);
+      chimeOsc.stop(now + 3.25);
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+export const startSilverVillageMusic = (volume: number = 0.08) => {
+  stopSilverVillageMusic();
+  isSilverMusicPlaying = true;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    // 1. Synthesize Flowing River Stream Noise
+    const bufferSize = ctx.sampleRate * 4;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      data[i] = (lastOut + 0.02 * white) / 1.02;
+      lastOut = data[i];
+      data[i] *= 0.6; // Stream murmur
+    }
+
+    silverRiverSource = ctx.createBufferSource();
+    silverRiverSource.buffer = buffer;
+    silverRiverSource.loop = true;
+
+    // Bandpass filter for crystal flowing water sound
+    const streamFilter = ctx.createBiquadFilter();
+    streamFilter.type = 'bandpass';
+    streamFilter.frequency.setValueAtTime(750, ctx.currentTime);
+    streamFilter.Q.setValueAtTime(0.8, ctx.currentTime);
+
+    silverRiverGain = ctx.createGain();
+    silverRiverGain.gain.setValueAtTime(0.001, ctx.currentTime);
+    silverRiverGain.gain.linearRampToValueAtTime(volume * 0.45, ctx.currentTime + 2.0);
+
+    silverRiverSource.connect(streamFilter);
+    streamFilter.connect(silverRiverGain);
+    silverRiverGain.connect(ctx.destination);
+
+    silverRiverSource.start(0);
+
+    // 2. Start Fantasy Melody Loop (every 6.2s)
+    phraseIndex = 0;
+    playSilverMusicPhrase();
+
+    silverMusicInterval = window.setInterval(() => {
+      if (isSilverMusicPlaying) {
+        playSilverMusicPhrase();
+      }
+    }, 6200);
+  } catch {
+    // Audio fallback
+  }
+};
+
+export const stopSilverVillageMusic = () => {
+  isSilverMusicPlaying = false;
+
+  if (silverRiverGain && audioCtx) {
+    try {
+      silverRiverGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+      setTimeout(() => {
+        if (silverRiverSource) {
+          try {
+            silverRiverSource.stop();
+            silverRiverSource.disconnect();
+          } catch {}
+          silverRiverSource = null;
+        }
+      }, 850);
+    } catch {}
+  }
+
+  if (silverMusicInterval !== null) {
+    clearInterval(silverMusicInterval);
+    silverMusicInterval = null;
+  }
+};
+
+/**
+ * 🥈 Distinct Silver Village Level Arrival Sound Effect (approx 1.2s).
+ * Brilliant crystal silver chime fanfare (A5 -> C#6 -> E6 -> A6 -> C#7)
+ * with a shimmering metallic resonance distinct from Bronze Village.
+ */
+export const playSilverNodeArriveSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 880.00, time: 0, dur: 0.8 },      // A5
+      { freq: 1108.73, time: 0.12, dur: 0.85 }, // C#6
+      { freq: 1318.51, time: 0.24, dur: 0.9 },  // E6
+      { freq: 1760.00, time: 0.36, dur: 1.1 },  // A6
+      { freq: 2217.46, time: 0.48, dur: 1.4 },  // C#7 (shimmering silver peak)
+    ];
+
+    notes.forEach(({ freq, time, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + time);
+
+      // Silver bell attack & sustained ring
+      gain.gain.setValueAtTime(0.0001, now + time);
+      gain.gain.linearRampToValueAtTime(0.14, now + time + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + dur);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + time);
+      osc.stop(now + time + dur + 0.05);
+    });
+
+    // Sub harmonic metallic ring
+    const bellOsc = ctx.createOscillator();
+    const bellGain = ctx.createGain();
+    bellOsc.type = 'triangle';
+    bellOsc.frequency.setValueAtTime(440, now + 0.36);
+    bellGain.gain.setValueAtTime(0.0001, now + 0.36);
+    bellGain.gain.linearRampToValueAtTime(0.08, now + 0.38);
+    bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+    bellOsc.connect(bellGain);
+    bellGain.connect(ctx.destination);
+    bellOsc.start(now + 0.36);
+    bellOsc.stop(now + 1.25);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥈 Distinct Silver Village Cobblestone & Bridge Step Sound (approx 0.1s).
+ */
+export const playSilverStepSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(320 + Math.random() * 80, now);
+    osc.frequency.exponentialRampToValueAtTime(140, now + 0.06);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.04, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥈 Distinct Silver Village Grand Fountain Splash Chime (approx 0.6s).
+ */
+export const playSilverFountainSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    // Ascending water drop bubble tones
+    [1200, 1500, 1850, 2200].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.3, now + idx * 0.08 + 0.06);
+
+      gain.gain.setValueAtTime(0.0001, now + idx * 0.08);
+      gain.gain.linearRampToValueAtTime(0.06, now + idx * 0.08 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.18);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + idx * 0.08);
+      osc.stop(now + idx * 0.08 + 0.2);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥇 Procedural Gold City Royal Soundtrack & Maritime Capital Ambience (Web Audio API)
+ * Grand, royal, adventurous, prestigious fantasy capital theme with triumphant brass harmonies,
+ * majestic harp arpeggios, cathedral carillon bells, and gentle coastal sea breeze ambience.
+ * 100% original, copyright-safe, zero external audio assets.
+ */
+let goldHarborBreezeSource: AudioBufferSourceNode | null = null;
+let goldHarborBreezeGain: GainNode | null = null;
+let goldMusicInterval: number | null = null;
+let isGoldMusicPlaying = false;
+
+// C Major / G Major / F Major Royal Capital Fanfare & Melodies (Hz)
+const GOLD_MELODIES = [
+  // Phrase 1: Royal Capital Entrance Fanfare (C5 -> E5 -> G5 -> C6 -> B5 -> G5 -> A5 -> G5)
+  [
+    { f: 523.25, d: 0.5, t: 0 },    // C5
+    { f: 659.25, d: 0.5, t: 0.5 },  // E5
+    { f: 783.99, d: 0.7, t: 1.0 },  // G5
+    { f: 1046.50, d: 1.1, t: 1.7 }, // C6
+    { f: 987.77, d: 0.5, t: 2.8 },  // B5
+    { f: 783.99, d: 0.6, t: 3.3 },  // G5
+    { f: 880.00, d: 0.8, t: 3.9 },  // A5
+    { f: 783.99, d: 1.4, t: 4.7 },  // G5
+  ],
+  // Phrase 2: Sovereign Grand Plaza & Docks (F5 -> A5 -> C6 -> D6 -> C6 -> A5 -> G5)
+  [
+    { f: 698.46, d: 0.6, t: 0 },    // F5
+    { f: 880.00, d: 0.6, t: 0.6 },  // A5
+    { f: 1046.50, d: 0.8, t: 1.2 }, // C6
+    { f: 1174.66, d: 1.0, t: 2.0 }, // D6
+    { f: 1046.50, d: 0.7, t: 3.0 }, // C6
+    { f: 880.00, d: 0.7, t: 3.7 },  // A5
+    { f: 783.99, d: 1.3, t: 4.4 },  // G5
+  ],
+  // Phrase 3: Crown Cathedral Zenith (G5 -> B5 -> D6 -> E6 -> D6 -> C6 -> E6 -> G6)
+  [
+    { f: 783.99, d: 0.5, t: 0 },    // G5
+    { f: 987.77, d: 0.5, t: 0.5 },  // B5
+    { f: 1174.66, d: 0.8, t: 1.0 }, // D6
+    { f: 1318.51, d: 0.9, t: 1.8 }, // E6
+    { f: 1174.66, d: 0.6, t: 2.7 }, // D6
+    { f: 1046.50, d: 0.7, t: 3.3 }, // C6
+    { f: 1318.51, d: 0.8, t: 4.0 }, // E6
+    { f: 1567.98, d: 1.5, t: 4.8 }, // G6 (supreme triumphant peak)
+  ],
+];
+
+// Rich Royal Majestic Pad Chords (C, G, Am, F)
+const GOLD_CHORDS = [
+  [261.63, 329.63, 392.00, 523.25], // C Major (C4, E4, G4, C5)
+  [196.00, 246.94, 293.66, 392.00], // G Major (G3, B3, D4, G4)
+  [220.00, 261.63, 329.63, 440.00], // A Minor (A3, C4, E4, A4)
+  [174.61, 220.00, 261.63, 349.23], // F Major (F3, A3, C4, F4)
+];
+
+let goldPhraseIndex = 0;
+
+export const playGoldMusicPhrase = () => {
+  const ctx = getAudioContext();
+  if (!ctx || !isGoldMusicPlaying) return;
+
+  try {
+    const now = ctx.currentTime;
+    const phrase = GOLD_MELODIES[goldPhraseIndex % GOLD_MELODIES.length];
+    const chord = GOLD_CHORDS[goldPhraseIndex % GOLD_CHORDS.length];
+    goldPhraseIndex++;
+
+    // 1. Play Royal Majestic Brass & String Pad Chords
+    chord.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(550, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.022, now + 1.0);
+      gain.gain.linearRampToValueAtTime(0.016, now + 4.5);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 6.2);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 6.3);
+    });
+
+    // 2. Play Triumphant Horn/Flute Melodic Line
+    phrase.forEach(({ f, d, t }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(f, now + t);
+
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.linearRampToValueAtTime(0.042, now + t + 0.07);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + d + 0.3);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + t);
+      osc.stop(now + t + d + 0.35);
+    });
+
+    // 3. Cathedral Golden Bell Carillon Chimes
+    if (Math.random() > 0.3) {
+      const bellFreqs = [2093.00, 2637.02, 3135.96]; // C7, E7, G7
+      const bellFreq = bellFreqs[Math.floor(Math.random() * bellFreqs.length)];
+
+      const bellOsc = ctx.createOscillator();
+      const bellGain = ctx.createGain();
+
+      bellOsc.type = 'sine';
+      bellOsc.frequency.setValueAtTime(bellFreq, now + 2.2);
+
+      bellGain.gain.setValueAtTime(0.0001, now + 2.2);
+      bellGain.gain.linearRampToValueAtTime(0.02, now + 2.22);
+      bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.8);
+
+      bellOsc.connect(bellGain);
+      bellGain.connect(ctx.destination);
+
+      bellOsc.start(now + 2.2);
+      bellOsc.stop(now + 3.85);
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+export const startGoldCityMusic = (volume: number = 0.08) => {
+  stopGoldCityMusic();
+  isGoldMusicPlaying = true;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    // 1. Synthesize Gentle Coastal Sea Breeze / Harbor Water Noise
+    const bufferSize = ctx.sampleRate * 4;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    let lastVal = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      lastVal = (lastVal + 0.015 * white) / 1.015;
+      data[i] = lastVal * 0.5;
+    }
+
+    goldHarborBreezeSource = ctx.createBufferSource();
+    goldHarborBreezeSource.buffer = buffer;
+    goldHarborBreezeSource.loop = true;
+
+    const breezeFilter = ctx.createBiquadFilter();
+    breezeFilter.type = 'bandpass';
+    breezeFilter.frequency.setValueAtTime(420, ctx.currentTime);
+    breezeFilter.Q.setValueAtTime(0.6, ctx.currentTime);
+
+    goldHarborBreezeGain = ctx.createGain();
+    goldHarborBreezeGain.gain.setValueAtTime(0.001, ctx.currentTime);
+    goldHarborBreezeGain.gain.linearRampToValueAtTime(volume * 0.4, ctx.currentTime + 2.0);
+
+    goldHarborBreezeSource.connect(breezeFilter);
+    breezeFilter.connect(goldHarborBreezeGain);
+    goldHarborBreezeGain.connect(ctx.destination);
+
+    goldHarborBreezeSource.start(0);
+
+    // 2. Start Royal Music Loop (every 6.4s)
+    goldPhraseIndex = 0;
+    playGoldMusicPhrase();
+
+    goldMusicInterval = window.setInterval(() => {
+      if (isGoldMusicPlaying) {
+        playGoldMusicPhrase();
+      }
+    }, 6400);
+  } catch {
+    // Audio fallback
+  }
+};
+
+export const stopGoldCityMusic = () => {
+  isGoldMusicPlaying = false;
+
+  if (goldHarborBreezeGain && audioCtx) {
+    try {
+      goldHarborBreezeGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+      setTimeout(() => {
+        if (goldHarborBreezeSource) {
+          try {
+            goldHarborBreezeSource.stop();
+            goldHarborBreezeSource.disconnect();
+          } catch {}
+          goldHarborBreezeSource = null;
+        }
+      }, 850);
+    } catch {}
+  }
+
+  if (goldMusicInterval !== null) {
+    clearInterval(goldMusicInterval);
+    goldMusicInterval = null;
+  }
+};
+
+/**
+ * 🥇 Distinct Gold City Level Arrival Sound Effect (approx 1.4s).
+ * Grand Imperial Trumpet Fanfare & Shimmering Gold Carillon Bell (C5 -> E5 -> G5 -> C6 -> E6 -> G6).
+ */
+export const playGoldNodeArriveSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const chords = [
+      { freq: 523.25, time: 0, dur: 0.9 },      // C5
+      { freq: 659.25, time: 0.1, dur: 0.9 },    // E5
+      { freq: 783.99, time: 0.2, dur: 0.95 },   // G5
+      { freq: 1046.50, time: 0.3, dur: 1.1 },   // C6
+      { freq: 1318.51, time: 0.42, dur: 1.2 },  // E6
+      { freq: 1567.98, time: 0.54, dur: 1.5 },  // G6 (golden crest fanfare)
+    ];
+
+    chords.forEach(({ freq, time, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now + time);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1400, now + time);
+
+      gain.gain.setValueAtTime(0.0001, now + time);
+      gain.gain.linearRampToValueAtTime(0.13, now + time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + time);
+      osc.stop(now + time + dur + 0.05);
+    });
+
+    // Golden sparkling glissando bell overtone
+    [2093.00, 2637.02, 3135.96].forEach((bfreq, bidx) => {
+      const bOsc = ctx.createOscillator();
+      const bGain = ctx.createGain();
+
+      bOsc.type = 'sine';
+      bOsc.frequency.setValueAtTime(bfreq, now + 0.54 + bidx * 0.08);
+
+      bGain.gain.setValueAtTime(0.0001, now + 0.54 + bidx * 0.08);
+      bGain.gain.linearRampToValueAtTime(0.06, now + 0.54 + bidx * 0.08 + 0.015);
+      bGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+
+      bOsc.connect(bGain);
+      bGain.connect(ctx.destination);
+
+      bOsc.start(now + 0.54 + bidx * 0.08);
+      bOsc.stop(now + 1.45);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥇 Distinct Gold City Marble Paver & Pier Footstep Sound (approx 0.09s).
+ */
+export const playGoldStepSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(420 + Math.random() * 90, now);
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.05);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.045, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥇 Distinct Gold City Supreme Palace Cathedral Chime (approx 1.5s).
+ */
+export const playGoldPalaceChime = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    [523.25, 659.25, 783.99, 1046.50, 1567.98].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.1);
+
+      gain.gain.setValueAtTime(0.0001, now + i * 0.1);
+      gain.gain.linearRampToValueAtTime(0.08, now + i * 0.1 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.1 + 1.2);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + i * 0.1);
+      osc.stop(now + i * 0.1 + 1.25);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥇 Distinct Gold City Gilded Lion Fountain Splash Chime (approx 0.7s).
+ */
+export const playGoldFountainSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    [1300, 1650, 1950, 2400].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.25, now + idx * 0.07 + 0.06);
+
+      gain.gain.setValueAtTime(0.0001, now + idx * 0.07);
+      gain.gain.linearRampToValueAtTime(0.07, now + idx * 0.07 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.07 + 0.22);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + idx * 0.07);
+      osc.stop(now + idx * 0.07 + 0.24);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥇 Distinct Gold City Bazaar Market Coins & Brass Bell (approx 0.6s).
+ */
+export const playGoldMarketSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    // Jingle of gold coins
+    [2400, 3100, 2800, 3500, 4200].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.04);
+
+      gain.gain.setValueAtTime(0.0001, now + i * 0.04);
+      gain.gain.linearRampToValueAtTime(0.05, now + i * 0.04 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.04 + 0.15);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + i * 0.04);
+      osc.stop(now + i * 0.04 + 0.18);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥇 Distinct Gold City Harbor Ship Nautical Bell & Sea Splash (approx 0.8s).
+ */
+export const playGoldShipSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    // Ship's double bell ring
+    [1760.00, 1760.00].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.22);
+
+      gain.gain.setValueAtTime(0.0001, now + idx * 0.22);
+      gain.gain.linearRampToValueAtTime(0.09, now + idx * 0.22 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.22 + 0.45);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + idx * 0.22);
+      osc.stop(now + idx * 0.22 + 0.48);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🥇 Distinct Gold City Fortress Portcullis Heavy Gate Sound (approx 0.7s).
+ */
+export const playGoldGateSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(110, now);
+    osc.frequency.linearRampToValueAtTime(75, now + 0.45);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(250, now);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.6);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * ============================================================================
+ * 💎 WORLD 4: DIAMOND CITY PROCEDURAL ETHEREAL SOUNDTRACK & SFX
+ * ============================================================================
+ * 100% original, licensed-safe Web Audio API synthesis.
+ * Captures an ethereal, magical, mysterious, beautiful, futuristic fantasy atmosphere:
+ * - Shimmering crystal glass pads in mystical Lydian/Dorian progressions (F#m9 -> Dmaj7#11 -> Bm9 -> C#m7)
+ * - Cascading celesta/crystal harp arpeggio runs
+ * - Celestial glass bell harmonics & mana resonance
+ * - Continuous waterfall & crystal stream ambience
+ */
+
+let isDiamondMusicPlaying = false;
+let diamondWaterfallSource: AudioBufferSourceNode | null = null;
+let diamondWaterfallGain: GainNode | null = null;
+let diamondMusicInterval: number | null = null;
+let diamondPhraseIndex = 0;
+
+// Musical phrases for the Diamond City ethereal soundtrack
+const DIAMOND_CHORD_PROGRESSIONS = [
+  // Chord 1: F#m9 (Ethereal Crystal Mystery)
+  {
+    padFreqs: [185.00, 277.18, 369.99, 440.00, 554.37, 659.25], // F#3, C#4, F#4, A4, C#5, E5
+    arpeggio: [
+      { f: 739.99, t: 0.2, d: 0.9 },   // F#5
+      { f: 880.00, t: 0.5, d: 0.9 },   // A5
+      { f: 1108.73, t: 0.8, d: 1.0 },  // C#6
+      { f: 1318.51, t: 1.1, d: 1.0 },  // E6
+      { f: 1479.98, t: 1.4, d: 1.2 },  // F#6
+      { f: 1760.00, t: 1.8, d: 1.5 },  // A6
+      { f: 2217.46, t: 2.3, d: 1.8 },  // C#7
+    ],
+  },
+  // Chord 2: Dmaj7#11 (Radiant Diamond Palace Aura)
+  {
+    padFreqs: [146.83, 220.00, 293.66, 369.99, 440.00, 554.37, 739.99], // D3, A3, D4, F#4, A4, C#5, F#5
+    arpeggio: [
+      { f: 880.00, t: 0.2, d: 0.9 },   // A5
+      { f: 1108.73, t: 0.5, d: 0.9 },  // C#6
+      { f: 1479.98, t: 0.8, d: 1.1 },  // F#6
+      { f: 1661.22, t: 1.2, d: 1.3 },  // G#6 (#11 luminous sparkle)
+      { f: 2217.46, t: 1.7, d: 1.6 },  // C#7
+      { f: 2959.96, t: 2.2, d: 2.0 },  // F#7
+    ],
+  },
+  // Chord 3: Bm9 (Ancient Mountain Waterfall Ridge)
+  {
+    padFreqs: [123.47, 185.00, 246.94, 293.66, 369.99, 440.00, 587.33], // B2, F#3, B3, D4, F#4, A4, D5
+    arpeggio: [
+      { f: 587.33, t: 0.2, d: 0.8 },   // D5
+      { f: 739.99, t: 0.5, d: 0.9 },   // F#5
+      { f: 880.00, t: 0.8, d: 0.9 },   // A5
+      { f: 987.77, t: 1.1, d: 1.1 },   // B5
+      { f: 1174.66, t: 1.5, d: 1.3 },  // D6
+      { f: 1479.98, t: 1.9, d: 1.6 },  // F#6
+      { f: 1975.53, t: 2.4, d: 1.8 },  // B6
+    ],
+  },
+  // Chord 4: C#m7 / Amaj9 (Floating Diamond Core Zenith)
+  {
+    padFreqs: [138.59, 207.65, 277.18, 329.63, 415.30, 493.88, 659.25], // C#3, G#3, C#4, E4, G#4, B4, E5
+    arpeggio: [
+      { f: 830.61, t: 0.2, d: 0.9 },   // G#5
+      { f: 987.77, t: 0.5, d: 0.9 },   // B5
+      { f: 1318.51, t: 0.8, d: 1.2 },  // E6
+      { f: 1661.22, t: 1.2, d: 1.4 },  // G#6
+      { f: 2093.00, t: 1.7, d: 1.6 },  // C7
+      { f: 2637.02, t: 2.2, d: 2.2 },  // E7
+    ],
+  },
+];
+
+const playDiamondMusicPhrase = () => {
+  const ctx = getAudioContext();
+  if (!ctx || !isDiamondMusicPlaying) return;
+
+  try {
+    const now = ctx.currentTime;
+    const progression = DIAMOND_CHORD_PROGRESSIONS[diamondPhraseIndex % DIAMOND_CHORD_PROGRESSIONS.length];
+    diamondPhraseIndex++;
+
+    // 1. Lush Shimmering Glass Pad Chords (Warm Sine + Subtle Triangle Overtones)
+    progression.padFreqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(950 + idx * 80, now);
+      filter.Q.setValueAtTime(1.2, now);
+
+      // Slow ethereal swell & gentle decay
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.018, now + 1.6);
+      gain.gain.linearRampToValueAtTime(0.014, now + 4.8);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 7.2);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 7.3);
+    });
+
+    // 2. Cascading Celesta / Crystal Harp Arpeggio Twinkles
+    progression.arpeggio.forEach(({ f, t, d }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + t);
+
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.linearRampToValueAtTime(0.038, now + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + d);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + t);
+      osc.stop(now + t + d + 0.05);
+    });
+
+    // 3. High Celestial Pure Glass Bell Chimes (Diamond facets glinting)
+    if (Math.random() > 0.25) {
+      const glintFreqs = [2793.83, 3322.44, 3520.00, 4434.92]; // High octave glass pings
+      const glintFreq = glintFreqs[Math.floor(Math.random() * glintFreqs.length)];
+
+      const glintOsc = ctx.createOscillator();
+      const glintGain = ctx.createGain();
+
+      glintOsc.type = 'sine';
+      glintOsc.frequency.setValueAtTime(glintFreq, now + 2.4);
+
+      glintGain.gain.setValueAtTime(0.0001, now + 2.4);
+      glintGain.gain.linearRampToValueAtTime(0.024, now + 2.42);
+      glintGain.gain.exponentialRampToValueAtTime(0.0001, now + 4.2);
+
+      glintOsc.connect(glintGain);
+      glintGain.connect(ctx.destination);
+
+      glintOsc.start(now + 2.4);
+      glintOsc.stop(now + 4.25);
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * Starts the continuous Diamond City background soundtrack and waterfall ambience loop.
+ */
+export const startDiamondCityMusic = (volume: number = 0.08) => {
+  stopDiamondCityMusic();
+  isDiamondMusicPlaying = true;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    // 1. Synthesize Flowing Waterfalls & Crystal Mana Hum Ambience
+    const bufferSize = ctx.sampleRate * 4;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    let lastVal = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      // Pink-filtered gentle rush of cascading mountain water
+      lastVal = (lastVal + 0.018 * white) / 1.018;
+      data[i] = lastVal * 0.45;
+    }
+
+    diamondWaterfallSource = ctx.createBufferSource();
+    diamondWaterfallSource.buffer = buffer;
+    diamondWaterfallSource.loop = true;
+
+    const waterFilter = ctx.createBiquadFilter();
+    waterFilter.type = 'bandpass';
+    waterFilter.frequency.setValueAtTime(580, ctx.currentTime);
+    waterFilter.Q.setValueAtTime(0.75, ctx.currentTime);
+
+    diamondWaterfallGain = ctx.createGain();
+    diamondWaterfallGain.gain.setValueAtTime(0.001, ctx.currentTime);
+    diamondWaterfallGain.gain.linearRampToValueAtTime(volume * 0.35, ctx.currentTime + 2.0);
+
+    diamondWaterfallSource.connect(waterFilter);
+    waterFilter.connect(diamondWaterfallGain);
+    diamondWaterfallGain.connect(ctx.destination);
+
+    diamondWaterfallSource.start(0);
+
+    // 2. Start Ethereal Crystal Melody Loop (every 7.0s)
+    diamondPhraseIndex = 0;
+    playDiamondMusicPhrase();
+
+    diamondMusicInterval = window.setInterval(() => {
+      if (isDiamondMusicPlaying) {
+        playDiamondMusicPhrase();
+      }
+    }, 7000);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * Stops the Diamond City soundtrack with smooth fadeout.
+ */
+export const stopDiamondCityMusic = () => {
+  isDiamondMusicPlaying = false;
+
+  if (diamondWaterfallGain && audioCtx) {
+    try {
+      diamondWaterfallGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+      setTimeout(() => {
+        if (diamondWaterfallSource) {
+          try {
+            diamondWaterfallSource.stop();
+            diamondWaterfallSource.disconnect();
+          } catch {}
+          diamondWaterfallSource = null;
+        }
+      }, 850);
+    } catch {}
+  }
+
+  if (diamondMusicInterval !== null) {
+    clearInterval(diamondMusicInterval);
+    diamondMusicInterval = null;
+  }
+};
+
+/**
+ * 💎 Distinct Diamond City Level Arrival Sound Effect (approx 1.5s).
+ * Resonant ascending crystal glass chord with celestial bell decay (F#5 -> A5 -> C#6 -> E6 -> G#6 -> C#7).
+ */
+export const playDiamondNodeArriveSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const chords = [
+      { freq: 739.99, time: 0, dur: 1.0 },      // F#5
+      { freq: 880.00, time: 0.1, dur: 1.05 },   // A5
+      { freq: 1108.73, time: 0.2, dur: 1.15 },  // C#6
+      { freq: 1318.51, time: 0.3, dur: 1.25 },  // E6
+      { freq: 1661.22, time: 0.42, dur: 1.4 },  // G#6
+      { freq: 2217.46, time: 0.54, dur: 1.6 },  // C#7
+    ];
+
+    chords.forEach(({ freq, time, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + time);
+
+      gain.gain.setValueAtTime(0.0001, now + time);
+      gain.gain.linearRampToValueAtTime(0.11, now + time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + dur);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + time);
+      osc.stop(now + time + dur + 0.05);
+    });
+
+    // Glassy harmonic chime overtone
+    [2959.96, 3520.00, 4434.92].forEach((bfreq, bidx) => {
+      const bOsc = ctx.createOscillator();
+      const bGain = ctx.createGain();
+
+      bOsc.type = 'sine';
+      bOsc.frequency.setValueAtTime(bfreq, now + 0.54 + bidx * 0.08);
+
+      bGain.gain.setValueAtTime(0.0001, now + 0.54 + bidx * 0.08);
+      bGain.gain.linearRampToValueAtTime(0.05, now + 0.54 + bidx * 0.08 + 0.015);
+      bGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+
+      bOsc.connect(bGain);
+      bGain.connect(ctx.destination);
+
+      bOsc.start(now + 0.54 + bidx * 0.08);
+      bOsc.stop(now + 1.55);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 💎 Distinct Diamond City Crystal Paver & Light Bridge Footstep Sound (approx 0.08s).
+ */
+export const playDiamondStepSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880 + Math.random() * 220, now);
+    osc.frequency.exponentialRampToValueAtTime(440, now + 0.05);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.035, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 💎 Distinct Diamond City Interactive Crystal Resonance Chime (approx 1.2s).
+ */
+export const playDiamondCrystalChime = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    [1108.73, 1479.98, 1760.00, 2217.46, 2959.96].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+
+      gain.gain.setValueAtTime(0.0001, now + idx * 0.05);
+      gain.gain.linearRampToValueAtTime(0.07, now + idx * 0.05 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.05 + 0.9);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + idx * 0.05);
+      osc.stop(now + idx * 0.05 + 0.95);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 💎 Distinct Diamond City Grand Arcane Crystal Palace Resonance (approx 1.8s).
+ */
+export const playDiamondPalaceSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    // Deep crystal chord with ethereal cathedral overtone
+    [277.18, 415.30, 554.37, 830.61, 1108.73, 1661.22].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = i < 2 ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.08);
+
+      gain.gain.setValueAtTime(0.0001, now + i * 0.08);
+      gain.gain.linearRampToValueAtTime(0.08, now + i * 0.08 + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 1.4);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 1.45);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
 
 

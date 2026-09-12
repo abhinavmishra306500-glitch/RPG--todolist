@@ -21,13 +21,24 @@ import {
   playStatIncreaseSound,
   startForestAmbience,
   stopForestAmbience,
+  startSilverVillageMusic,
+  stopSilverVillageMusic,
+  playSilverNodeArriveSound,
+  playSilverStepSound,
+  startGoldCityMusic,
+  stopGoldCityMusic,
+  playGoldNodeArriveSound,
+  playGoldStepSound,
+  startDiamondCityMusic,
+  stopDiamondCityMusic,
+  playDiamondNodeArriveSound,
+  playDiamondStepSound,
 } from '../../utils/soundEffects';
 import {
   ArrowLeft,
   Swords,
   Sparkles,
   MapPin,
-  ChevronRight,
   ChevronLeft,
   Layers,
   Volume2,
@@ -62,15 +73,48 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
   const [isSoundOn, setIsSoundOn] = useState(true);
   const [devToast, setDevToast] = useState<string | null>(null);
 
-  // Forest Ambience Sound Loop
+  // World Music & Ambience Sound Loop
   useEffect(() => {
-    if (isSoundOn && selectedWorld.id === 'bronze-village') {
+    if (!isSoundOn) {
+      stopForestAmbience();
+      stopSilverVillageMusic();
+      stopGoldCityMusic();
+      stopDiamondCityMusic();
+      return;
+    }
+
+    if (selectedWorld.id === 'bronze-village') {
+      stopSilverVillageMusic();
+      stopGoldCityMusic();
+      stopDiamondCityMusic();
       startForestAmbience(0.08);
+    } else if (selectedWorld.id === 'silver-village') {
+      stopForestAmbience();
+      stopGoldCityMusic();
+      stopDiamondCityMusic();
+      startSilverVillageMusic(0.08);
+    } else if (selectedWorld.id === 'gold-city') {
+      stopForestAmbience();
+      stopSilverVillageMusic();
+      stopDiamondCityMusic();
+      startGoldCityMusic(0.08);
+    } else if (selectedWorld.id === 'diamond-city') {
+      stopForestAmbience();
+      stopSilverVillageMusic();
+      stopGoldCityMusic();
+      startDiamondCityMusic(0.08);
     } else {
       stopForestAmbience();
+      stopSilverVillageMusic();
+      stopGoldCityMusic();
+      stopDiamondCityMusic();
     }
+
     return () => {
       stopForestAmbience();
+      stopSilverVillageMusic();
+      stopGoldCityMusic();
+      stopDiamondCityMusic();
     };
   }, [isSoundOn, selectedWorld.id]);
 
@@ -79,8 +123,17 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
 
   // Movement hook
   const handleArrival = useCallback(
-    (_targetLevel: number) => {
-      playQuestCompleteSound();
+    (targetLevel: number) => {
+      const arrivedDef = getMapLevelDef(targetLevel);
+      if (arrivedDef.worldId === 'diamond-city') {
+        playDiamondNodeArriveSound();
+      } else if (arrivedDef.worldId === 'gold-city') {
+        playGoldNodeArriveSound();
+      } else if (arrivedDef.worldId === 'silver-village') {
+        playSilverNodeArriveSound();
+      } else {
+        playQuestCompleteSound();
+      }
       const result = advanceMapLevel(player);
       if (result.advanced) {
         onUpdatePlayer(result.updatedPlayer);
@@ -123,8 +176,45 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
     }
   }, [player, onUpdatePlayer, teleportToPosition, selectedWorld.id]);
 
-  // Step forward helper (Dev key: ] or N or Shift+Right)
-  const handleAdvanceToNext = useCallback(() => {
+  // Step forward helper (Supports normal 1x walk or fast 4.5x sprint)
+  const handleAdvanceToNext = useCallback(
+    (speedMultiplier: number = 1) => {
+      if (isWalking) return;
+      const nextLevelNum = mapProgression.currentMapLevel + 1;
+      if (nextLevelNum > 50) {
+        showDevMessage('⭐ Reached Final Level 50!');
+        return;
+      }
+
+      const nextDef = getMapLevelDef(nextLevelNum);
+
+      if (nextDef.worldId !== selectedWorld.id) {
+        setSelectedWorld(getWorldById(nextDef.worldId));
+      }
+
+      if (nextDef.worldId === 'diamond-city') {
+        playDiamondStepSound();
+      } else if (nextDef.worldId === 'gold-city') {
+        playGoldStepSound();
+      } else if (nextDef.worldId === 'silver-village') {
+        playSilverStepSound();
+      } else {
+        playStatIncreaseSound();
+      }
+
+      const waypoints = getPathWaypointsBetweenLevels(mapProgression.currentMapLevel, nextLevelNum);
+      startWalkingAlongPath(waypoints, nextLevelNum, speedMultiplier);
+      if (speedMultiplier > 1) {
+        showDevMessage(`⚡ DEV SPRINT: Fast-Forwarding to Level ${nextLevelNum} (${speedMultiplier}x speed)...`);
+      } else {
+        showDevMessage(`⏩ Walking to Level ${nextLevelNum}...`);
+      }
+    },
+    [isWalking, mapProgression.currentMapLevel, selectedWorld.id, startWalkingAlongPath]
+  );
+
+  // Instant Warp / Teleport Forward 1 Level (Dev key: T or t)
+  const handleInstantAdvance = useCallback(() => {
     if (isWalking) return;
     const nextLevelNum = mapProgression.currentMapLevel + 1;
     if (nextLevelNum > 50) {
@@ -132,17 +222,29 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
       return;
     }
 
-    const nextDef = getMapLevelDef(nextLevelNum);
+    const result = advanceMapLevel(player);
+    if (result.advanced) {
+      onUpdatePlayer(result.updatedPlayer);
+      const nextDef = getMapLevelDef(result.toLevel);
+      teleportToPosition(nextDef.position);
 
-    if (nextDef.worldId !== selectedWorld.id) {
-      setSelectedWorld(getWorldById(nextDef.worldId));
+      if (nextDef.worldId !== selectedWorld.id) {
+        setSelectedWorld(getWorldById(nextDef.worldId));
+      }
+
+      if (nextDef.worldId === 'diamond-city') {
+        playDiamondNodeArriveSound();
+      } else if (nextDef.worldId === 'gold-city') {
+        playGoldNodeArriveSound();
+      } else if (nextDef.worldId === 'silver-village') {
+        playSilverNodeArriveSound();
+      } else {
+        playQuestCompleteSound();
+      }
+
+      showDevMessage(`⚡ DEV WARP: Instant Jumped to Level ${result.toLevel} (${nextDef.name})`);
     }
-
-    playStatIncreaseSound();
-    const waypoints = getPathWaypointsBetweenLevels(mapProgression.currentMapLevel, nextLevelNum);
-    startWalkingAlongPath(waypoints, nextLevelNum);
-    showDevMessage(`⏩ Walking to Level ${nextLevelNum}...`);
-  }, [isWalking, mapProgression.currentMapLevel, selectedWorld.id, startWalkingAlongPath]);
+  }, [isWalking, mapProgression.currentMapLevel, player, onUpdatePlayer, teleportToPosition, selectedWorld.id]);
 
   // Developer Keyboard Shortcuts Listener
   useEffect(() => {
@@ -157,10 +259,25 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
         e.preventDefault();
         handleStepBackward();
       }
-      // Forward shortcuts: ] , N , n , > , Shift + ArrowRight
-      else if (e.key === ']' || e.key === 'n' || e.key === 'N' || e.key === '>' || (e.shiftKey && e.key === 'ArrowRight')) {
+      // Instant Warp Forward shortcut: T , t
+      else if (e.key === 't' || e.key === 'T') {
         e.preventDefault();
-        handleAdvanceToNext();
+        handleInstantAdvance();
+      }
+      // Fast Sprint Forward (4.5x speed): F , f , Shift + ] , Shift + N , Shift + ArrowRight , >
+      else if (
+        e.key === 'f' ||
+        e.key === 'F' ||
+        (e.shiftKey && (e.key === ']' || e.key === 'n' || e.key === 'N' || e.key === 'ArrowRight')) ||
+        e.key === '>'
+      ) {
+        e.preventDefault();
+        handleAdvanceToNext(4.5);
+      }
+      // Normal Forward (1x speed): ] , N , n
+      else if (e.key === ']' || e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        handleAdvanceToNext(1);
       }
       // Reset to Level 1: R, r, 0
       else if (e.key === 'r' || e.key === 'R' || e.key === '0') {
@@ -181,7 +298,7 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleStepBackward, handleAdvanceToNext, mapProgression, onUpdatePlayer, player, teleportToPosition]);
+  }, [handleStepBackward, handleAdvanceToNext, handleInstantAdvance, mapProgression, onUpdatePlayer, player, teleportToPosition]);
 
   const isHeroInThisWorld = selectedWorld.id === currentLevelDef.worldId;
   const nextLevelNumber = mapProgression.currentMapLevel + 1;
@@ -244,7 +361,23 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
                 ? 'bg-gradient-to-b from-emerald-800 to-emerald-950 text-emerald-300 border-emerald-500'
                 : 'bg-gradient-to-b from-slate-800 to-slate-950 text-slate-400 border-slate-700'
             }`}
-            title={isSoundOn ? 'Mute Forest Sound' : 'Play Forest Sound'}
+            title={
+              isSoundOn
+                ? selectedWorld.id === 'diamond-city'
+                  ? 'Mute Diamond City Ethereal Music & Waterfalls'
+                  : selectedWorld.id === 'gold-city'
+                  ? 'Mute Gold City Royal Music & Breeze'
+                  : selectedWorld.id === 'silver-village'
+                  ? 'Mute Silver Village Music & Stream'
+                  : 'Mute Forest Sound'
+                : selectedWorld.id === 'diamond-city'
+                ? 'Play Diamond City Ethereal Music & Waterfalls'
+                : selectedWorld.id === 'gold-city'
+                ? 'Play Gold City Royal Music & Breeze'
+                : selectedWorld.id === 'silver-village'
+                ? 'Play Silver Village Music & Stream'
+                : 'Play Forest Sound'
+            }
           >
             {isSoundOn ? (
               <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
@@ -389,21 +522,39 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
 
         {/* Walk / Advance to Next Level Button */}
         {canAdvance && (
-          <button
-            type="button"
-            disabled={isWalking}
-            onClick={handleAdvanceToNext}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg font-black text-xs sm:text-sm uppercase tracking-wider transition-all active:scale-95 shadow-lg ${
-              isWalking
-                ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-wait'
-                : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 border-2 border-amber-300 cursor-pointer animate-pulse'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-slate-950" />
-            <span>{isWalking ? 'Walking Along Path...' : `Walk to Level ${nextLevelNumber}`}</span>
-            <ChevronRight className="w-4 h-4 text-slate-950" />
-            <span className="text-[10px] bg-amber-700/80 px-1 py-0.2 rounded text-amber-100 font-mono hidden sm:inline">]</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isWalking}
+              onClick={() => handleAdvanceToNext(1)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg ${
+                isWalking
+                  ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-wait'
+                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 border-2 border-amber-300 cursor-pointer animate-pulse'
+              }`}
+              title="Walk to Next Level (Key: ] or N)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+              <span>{isWalking ? 'Walking...' : `Walk to L${nextLevelNumber}`}</span>
+              <span className="text-[10px] bg-amber-700/80 px-1 py-0.2 rounded text-amber-100 font-mono">]</span>
+            </button>
+
+            {/* Dev Fast Sprint Button (4.5x Speed) */}
+            <button
+              type="button"
+              disabled={isWalking}
+              onClick={() => handleAdvanceToNext(4.5)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-black text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg ${
+                isWalking
+                  ? 'bg-slate-800/60 text-slate-500 border border-slate-700 cursor-wait'
+                  : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 border-2 border-cyan-300 cursor-pointer'
+              }`}
+              title="Developer: Fast Sprint 4.5x Speed (Key: F or Shift+])"
+            >
+              <span>⚡ Sprint</span>
+              <span className="text-[10px] bg-cyan-800 px-1 py-0.2 rounded text-cyan-100 font-mono">F</span>
+            </button>
+          </div>
         )}
       </footer>
 

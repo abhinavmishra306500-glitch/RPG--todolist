@@ -11,7 +11,7 @@ export interface CharacterMovementState {
   facing: FacingDirection;
   isWalking: boolean;
   walkCycle: number; // 0 to 1
-  startWalkingAlongPath: (waypoints: Point2D[], targetLevel: number) => void;
+  startWalkingAlongPath: (waypoints: Point2D[], targetLevel: number, speedMultiplier?: number) => void;
   teleportToPosition: (pos: Point2D) => void;
 }
 
@@ -32,6 +32,7 @@ export const useCharacterMovement = ({
     segmentDistances: number[];
     startTime: number;
     duration: number;
+    speedMultiplier: number;
   } | null>(null);
 
   // Sync position if initialPosition changes when not in motion
@@ -53,7 +54,7 @@ export const useCharacterMovement = ({
   }, []);
 
   const startWalkingAlongPath = useCallback(
-    (waypoints: Point2D[], targetLevel: number) => {
+    (waypoints: Point2D[], targetLevel: number, speedMultiplier: number = 1) => {
       if (waypoints.length < 2) return;
 
       if (animFrameRef.current) {
@@ -74,8 +75,9 @@ export const useCharacterMovement = ({
 
       if (totalDist === 0) return;
 
-      // Speed: ~110 pixels per second (natural walking pace)
-      const walkSpeed = 110;
+      // Base Speed: ~110 pixels per second, scaled by speedMultiplier
+      const baseSpeed = 110;
+      const walkSpeed = baseSpeed * Math.max(0.2, speedMultiplier);
       const duration = (totalDist / walkSpeed) * 1000; // ms
 
       movementRef.current = {
@@ -85,6 +87,7 @@ export const useCharacterMovement = ({
         segmentDistances,
         startTime: performance.now(),
         duration,
+        speedMultiplier,
       };
 
       setIsWalking(true);
@@ -92,7 +95,7 @@ export const useCharacterMovement = ({
       const step = (now: number) => {
         if (!movementRef.current) return;
 
-        const { waypoints, targetLevel, totalDistance, segmentDistances, startTime, duration } =
+        const { waypoints, targetLevel, totalDistance, segmentDistances, startTime, duration, speedMultiplier } =
           movementRef.current;
         const elapsed = now - startTime;
         const progress = Math.min(1, elapsed / duration);
@@ -134,8 +137,9 @@ export const useCharacterMovement = ({
           setFacing(dy > 0 ? 'down' : 'up');
         }
 
-        // Continuous walking cycle (steps every ~380ms)
-        const cycleProgress = (elapsed % 380) / 380;
+        // Continuous walking cadence scaled with speed (steps cadence)
+        const stepCadence = Math.max(80, 380 / speedMultiplier);
+        const cycleProgress = (elapsed % stepCadence) / stepCadence;
         setWalkCycle(cycleProgress);
 
         if (progress < 1) {
