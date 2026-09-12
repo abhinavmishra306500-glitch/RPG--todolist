@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import type { UserRole, LoginFormData, AuthMockSession } from './types/auth';
 import type { CharacterProfile } from './types/character';
+import type { PlayerState } from './types/progression';
+import { createInitialPlayerState } from './utils/progression';
+import { DEFAULT_CHARACTER } from './types/character';
 import { RoleSelector } from './components/auth/RoleSelector';
 import { PlayerLoginForm } from './components/auth/PlayerLoginForm';
 import { DeveloperLoginForm } from './components/auth/DeveloperLoginForm';
 import { MockSessionNotice } from './components/auth/MockSessionNotice';
 import { CharacterCreationScreen } from './components/character/CharacterCreationScreen';
 import { CharacterCreatedSuccess } from './components/character/CharacterCreatedSuccess';
+import { CharacterStatsPanel } from './components/character/CharacterStatsPanel';
 import { RpgCard } from './components/ui/RpgCard';
 import { PixelHeart, PixelSword, PixelWrench } from './components/common/PixelIcons';
 import { RpgOverworldBackground } from './components/environment/RpgOverworldBackground';
 
-type AppScreen = 'login' | 'character_creation' | 'character_created';
+type AppScreen = 'login' | 'character_creation' | 'character_created' | 'character_stats';
 
 export const App: React.FC = () => {
   const [screen, setScreen] = useState<AppScreen>('login');
@@ -19,6 +23,7 @@ export const App: React.FC = () => {
   const [activeSession, setActiveSession] = useState<AuthMockSession | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [characterProfile, setCharacterProfile] = useState<CharacterProfile | null>(null);
+  const [playerState, setPlayerState] = useState<PlayerState | null>(null);
   const [playerName, setPlayerName] = useState('');
 
   const handleRoleChange = (newRole: UserRole) => {
@@ -48,6 +53,7 @@ export const App: React.FC = () => {
             'All magic spells & skill trees unlocked',
             'Developer inspect tools & balance console',
             'Character creation sandbox & inspector',
+            'Live progression & stats simulator',
           ],
         });
       }
@@ -60,12 +66,23 @@ export const App: React.FC = () => {
   };
 
   const handleConfirmCharacter = (character: CharacterProfile) => {
+    const initialPlayer = createInitialPlayerState(character);
     setCharacterProfile(character);
+    setPlayerState(initialPlayer);
     setScreen('character_created');
   };
 
   const handleEditCharacter = () => {
     setScreen('character_creation');
+  };
+
+  const handleViewStats = () => {
+    if (!playerState && characterProfile) {
+      setPlayerState(createInitialPlayerState(characterProfile));
+    } else if (!playerState) {
+      setPlayerState(createInitialPlayerState(DEFAULT_CHARACTER));
+    }
+    setScreen('character_stats');
   };
 
   const handleLogOut = () => {
@@ -91,6 +108,16 @@ export const App: React.FC = () => {
       {screen === 'character_created' && characterProfile && (
         <CharacterCreatedSuccess
           character={characterProfile}
+          onEditCharacter={handleEditCharacter}
+          onViewStats={handleViewStats}
+          onLogOut={handleLogOut}
+        />
+      )}
+
+      {/* --- SCREEN 3: CHARACTER STATS & PROGRESSION PANEL (STEP 3) --- */}
+      {screen === 'character_stats' && playerState && (
+        <CharacterStatsPanel
+          initialPlayer={playerState}
           onEditCharacter={handleEditCharacter}
           onLogOut={handleLogOut}
         />
@@ -136,13 +163,20 @@ export const App: React.FC = () => {
                   onReset={handleResetSession}
                 />
                 {activeSession.role === 'developer' && (
-                  <div className="pt-2">
+                  <div className="pt-2 space-y-2">
                     <button
                       type="button"
                       onClick={() => setScreen('character_creation')}
                       className="w-full py-2 bg-amber-600/30 hover:bg-amber-600/50 border-2 border-amber-400 text-amber-200 text-xs font-pixel rounded-none transition-colors"
                     >
                       🧪 Test Character Creation (Dev Mode)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleViewStats}
+                      className="w-full py-2 bg-emerald-600/30 hover:bg-emerald-600/50 border-2 border-emerald-400 text-emerald-200 text-xs font-pixel rounded-none transition-colors"
+                    >
+                      📊 Test Character Stats & Profile (Dev Mode)
                     </button>
                   </div>
                 )}
@@ -184,10 +218,10 @@ export const App: React.FC = () => {
       {/* Semantic Accessible Footer */}
       <footer className="w-full text-center mt-6 text-xs text-slate-200 relative z-10 select-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
         <p className="font-pixel text-[9px] text-slate-900 tracking-wider font-bold">
-          Life RPG • Step 2: Character Creation Layer
+          Life RPG • Step 3: Character Progression & Stats Layer
         </p>
         <p className="text-[10px] text-slate-800 font-medium mt-1">
-          Frontend only. Server authentication & progression will connect in subsequent layers.
+          Frontend only. Server authentication, quests, and world maps will connect in subsequent layers.
         </p>
       </footer>
     </div>

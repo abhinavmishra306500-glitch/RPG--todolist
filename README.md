@@ -34,6 +34,25 @@ Turn your daily life, habits, and tasks into an epic 2D pixel-art RPG adventure.
   - Options to edit character or log out.
   - Safe frontend state persistence.
 
+### ✅ Step 3: Character Progression & Stats System
+- **Comprehensive TypeScript Data Model (`PlayerState`)**:
+  - **Progression**: `Level` starts at 1 (never 0, cannot drop below 1), `XP` starts at 0 (earned, not spent).
+  - **Vitals**: `Health` starts at 100 HP (max 100, clamped safely between 0–100).
+  - **Core RPG Attributes**: 4 independent stats: `Intelligence` (0), `Strength` (0), `Stamina` (0), `Skills` (0).
+  - **Economy**: `Gold` starts at 0 G (strictly separated from XP; cannot be spent into negatives).
+  - **Consistency**: `Streak` starts at 0 days (ready for quest/habit tracking).
+  - **League Tier**: Starts at `Bronze` (Tiers: Bronze, Silver, Gold, Diamond, Mythical).
+- **Reusable Progression Calculations (`src/utils/progression.ts`)**:
+  - Dynamic XP threshold calculation (`level * 100` XP needed to level up).
+  - Automated level advancement with rollover XP.
+  - Clamped stat and health mutation utilities.
+- **Character Stats & Profile Panel (`CharacterStatsPanel.tsx`)**:
+  - Shows Character Name, Live 2D Pixel Sprite Preview, Level badge, and League crest.
+  - Animated XP progress bar and Health vital bar with live metrics.
+  - 4 independent attribute cards with custom RPG iconography.
+  - Gold purse and Daily Streak indicators.
+  - Interactive **Progression Sandbox** allowing real-time testing of XP gain, level up, health change, and gold rewards.
+
 ---
 
 ## 🛠️ Tech Stack

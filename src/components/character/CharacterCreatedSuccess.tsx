@@ -16,12 +16,14 @@ import { Sparkles, Edit3, LogOut, CheckCircle2 } from 'lucide-react';
 interface CharacterCreatedSuccessProps {
   character: CharacterProfile;
   onEditCharacter: () => void;
+  onViewStats: () => void;
   onLogOut: () => void;
 }
 
 export const CharacterCreatedSuccess: React.FC<CharacterCreatedSuccessProps> = ({
   character,
   onEditCharacter,
+  onViewStats,
   onLogOut,
 }) => {
   const skin = SKIN_TONES.find((s) => s.id === character.skinToneId) || SKIN_TONES[0];
@@ -43,13 +45,13 @@ export const CharacterCreatedSuccess: React.FC<CharacterCreatedSuccessProps> = (
           {character.name}
         </h1>
         <p className="text-xs text-slate-300 font-medium">
-          Your RPG adventurer has been forged and saved in memory!
+          Your RPG adventurer has been forged and initialized with Level 1 stats!
         </p>
       </div>
 
       {/* Main Character Showcase Card */}
       <RpgCard theme="player" className="shadow-2xl">
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Character Live Sprite Showcase */}
           <div className="p-4 bg-[#12101e] border-2 border-[#2e2848] flex flex-col items-center justify-center">
             <CharacterPreview profile={character} size="md" />
@@ -85,28 +87,40 @@ export const CharacterCreatedSuccess: React.FC<CharacterCreatedSuccessProps> = (
 
             <div className="pt-2 border-t border-[#241f3d] flex items-center gap-2 text-[11px] text-emerald-300">
               <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-              <span>Step 2 Complete: Character creation state successfully stored.</span>
+              <span>Step 2 & 3: Level 1 baseline stats & progression initialized.</span>
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Primary View Stats Action Button */}
+          <RpgButton
+            type="button"
+            variant="player"
+            size="lg"
+            fullWidth
+            onClick={onViewStats}
+            icon={<Sparkles size={16} className="text-amber-300" />}
+          >
+            View Stats & Profile (Step 3) ➔
+          </RpgButton>
+
+          {/* Secondary Action Buttons */}
           <div className="grid grid-cols-2 gap-3 pt-1">
             <RpgButton
               type="button"
               variant="secondary"
-              size="md"
+              size="sm"
               onClick={onEditCharacter}
-              icon={<Edit3 size={14} />}
+              icon={<Edit3 size={13} />}
             >
               Edit Character
             </RpgButton>
 
             <RpgButton
               type="button"
-              variant="player"
-              size="md"
+              variant="secondary"
+              size="sm"
               onClick={onLogOut}
-              icon={<LogOut size={14} />}
+              icon={<LogOut size={13} />}
             >
               Log Out
             </RpgButton>
