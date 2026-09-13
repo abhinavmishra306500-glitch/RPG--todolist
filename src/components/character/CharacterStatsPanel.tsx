@@ -23,11 +23,14 @@ import {
   playLevelUpSound,
   playLeaguePromotedSound,
   playLeagueDemotedSound,
+  playPetMovementVocalization,
 } from '../../utils/soundEffects';
 import { AnimatedStatNumber } from '../common/AnimatedStatNumber';
 import { CharacterPreview } from './CharacterPreview';
 import { RpgCard } from '../ui/RpgCard';
 import { RpgButton } from '../ui/RpgButton';
+import { getPetById, normalizePlayerPets } from '../../utils/petData';
+import { PetSprite } from '../pet/PetSprite';
 import {
   Heart,
   Zap,
@@ -47,6 +50,9 @@ import {
   RefreshCw,
   Skull,
   Compass,
+  BookOpen,
+  ShoppingBag,
+  Home,
 } from 'lucide-react';
 
 interface CharacterStatsPanelProps {
@@ -54,6 +60,10 @@ interface CharacterStatsPanelProps {
   onEditCharacter: () => void;
   onContinueToQuests?: () => void;
   onOpenWorldMap?: () => void;
+  onOpenCreatureDex?: () => void;
+  onOpenPetShop?: () => void;
+  onOpenHome?: () => void;
+  onOpenShops?: (tab?: 'pets' | 'character' | 'home') => void;
   onLogOut: () => void;
   onUpdatePlayer?: (player: PlayerState) => void;
   isDevMode?: boolean;
@@ -64,6 +74,10 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
   onEditCharacter,
   onContinueToQuests,
   onOpenWorldMap,
+  onOpenCreatureDex,
+  onOpenPetShop,
+  onOpenHome,
+  onOpenShops,
   onLogOut,
   onUpdatePlayer,
   isDevMode = true,
@@ -71,6 +85,7 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
   const [player, setPlayer] = useState<PlayerState>(() => ({
     ...initialPlayer,
     league: normalizeLeague(initialPlayer.league),
+    pets: normalizePlayerPets(initialPlayer.pets),
   }));
   const [levelUpGlow, setLevelUpGlow] = useState(false);
   const [levelDecayToast, setLevelDecayToast] = useState<{ oldLevel: number; newLevel: number } | null>(null);
@@ -522,6 +537,67 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
                   🛡️ {shieldMeta.name}
                 </div>
               </div>
+
+              {/* Equipped Pet Companion Display */}
+              {(() => {
+                const equippedPet = player.pets?.equippedPetId
+                  ? getPetById(player.pets.equippedPetId)
+                  : null;
+                return (
+                  <div
+                    className="w-full mt-2 pt-2 border-t border-[#312952] flex items-center justify-between gap-1.5 px-2 py-1 bg-[#120f21] rounded border border-white/5 cursor-pointer hover:border-amber-400/40 transition-colors"
+                    onClick={() => {
+                      if (equippedPet) {
+                        playPetMovementVocalization(equippedPet.id, { force: true });
+                      }
+                    }}
+                    title={equippedPet ? `Click to hear ${equippedPet.name}!` : undefined}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {equippedPet ? (
+                        <>
+                          <PetSprite petId={equippedPet.id} size={28} animate />
+                          <div className="min-w-0 text-left">
+                            <div className="text-[9px] font-pixel text-amber-300 truncate">
+                              {equippedPet.name}
+                            </div>
+                            <div className="text-[8px] text-slate-400 font-mono">
+                              {equippedPet.rarity} Pet 🔊
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-[9px] text-slate-400 italic">
+                          🐾 No pet equipped
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {onOpenCreatureDex && (
+                        <button
+                          type="button"
+                          onClick={onOpenCreatureDex}
+                          className="px-1.5 py-0.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-200 text-[8px] font-pixel rounded transition-colors"
+                          title="Open CreatureDex"
+                        >
+                          Dex
+                        </button>
+                      )}
+                      {onOpenPetShop && (
+                        <button
+                          type="button"
+                          onClick={onOpenPetShop}
+                          className="px-1.5 py-0.5 bg-amber-950 hover:bg-amber-900 border border-amber-500/50 text-amber-300 text-[8px] font-pixel rounded transition-colors"
+                          title="Open Pet Shop"
+                        >
+                          Shop
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Vital Progression Bars (Level, Health, Prominent XP Bar) */}
@@ -933,34 +1009,98 @@ export const CharacterStatsPanel: React.FC<CharacterStatsPanelProps> = ({
             )}
           </div>
 
-          {/* Primary Journey Action Buttons (Quests & World Map) */}
-          <div className="pt-2 border-t-2 border-[#2b2545] grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {onContinueToQuests && (
-              <RpgButton
-                type="button"
-                variant="player"
-                size="lg"
-                fullWidth
-                onClick={onContinueToQuests}
-                icon={<ArrowRight size={16} className="text-slate-950 stroke-[3]" />}
-              >
-                CONTINUE TO QUESTS ➔
-              </RpgButton>
-            )}
+          {/* Primary Journey Action Buttons (Quests & World Map & Pets) */}
+          <div className="pt-2 border-t-2 border-[#2b2545] space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {onContinueToQuests && (
+                <RpgButton
+                  type="button"
+                  variant="player"
+                  size="lg"
+                  fullWidth
+                  onClick={onContinueToQuests}
+                  icon={<ArrowRight size={16} className="text-slate-950 stroke-[3]" />}
+                >
+                  CONTINUE TO QUESTS ➔
+                </RpgButton>
+              )}
 
-            {onOpenWorldMap && (
-              <RpgButton
-                type="button"
-                variant="secondary"
-                size="lg"
-                fullWidth
-                onClick={onOpenWorldMap}
-                icon={<Compass size={16} className="text-cyan-300" />}
-                className="bg-[#1b1730] border-cyan-500/60 hover:border-cyan-400 text-cyan-200"
-              >
-                🗺️ EXPLORE WORLD MAP (LVL {player.map?.currentMapLevel || 11})
-              </RpgButton>
-            )}
+              {onOpenWorldMap && (
+                <RpgButton
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
+                  onClick={onOpenWorldMap}
+                  icon={<Compass size={16} className="text-cyan-300" />}
+                  className="bg-[#1b1730] border-cyan-500/60 hover:border-cyan-400 text-cyan-200"
+                >
+                  🗺️ WORLD MAP (LVL {player.map?.currentMapLevel || 11})
+                </RpgButton>
+              )}
+
+              {/* Home & Shops Row */}
+              <div className="grid grid-cols-2 gap-2.5">
+                {onOpenHome && (
+                  <RpgButton
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    fullWidth
+                    onClick={onOpenHome}
+                    icon={<Home size={15} className="text-emerald-300" />}
+                    className="bg-[#122119] border-emerald-500/60 hover:border-emerald-400 text-emerald-200 text-xs"
+                  >
+                    🏠 MY HOME
+                  </RpgButton>
+                )}
+
+                {onOpenShops && (
+                  <RpgButton
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    fullWidth
+                    onClick={() => onOpenShops()}
+                    icon={<ShoppingBag size={15} className="text-amber-300" />}
+                    className="bg-[#241a12] border-amber-500/60 hover:border-amber-400 text-amber-200 text-xs"
+                  >
+                    🛍️ SHOPS
+                  </RpgButton>
+                )}
+              </div>
+            </div>
+
+            {/* Pet System Access Row */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {onOpenCreatureDex && (
+                <RpgButton
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  fullWidth
+                  onClick={onOpenCreatureDex}
+                  icon={<BookOpen size={14} className="text-indigo-300" />}
+                  className="bg-[#151226] border-indigo-500/60 hover:border-indigo-400 text-indigo-200 text-xs"
+                >
+                  📖 CREATUREDEX
+                </RpgButton>
+              )}
+
+              {(onOpenShops || onOpenPetShop) && (
+                <RpgButton
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  fullWidth
+                  onClick={() => (onOpenShops ? onOpenShops('pets') : onOpenPetShop?.())}
+                  icon={<ShoppingBag size={14} className="text-amber-300" />}
+                  className="bg-[#211a12] border-amber-500/60 hover:border-amber-400 text-amber-200 text-xs"
+                >
+                  🐾 PET SHOP
+                </RpgButton>
+              )}
+            </div>
           </div>
 
           {/* Secondary Action Navigation Controls */}

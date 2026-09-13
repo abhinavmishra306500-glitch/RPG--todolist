@@ -2037,3 +2037,1316 @@ export const playMythicalDragonSound = () => {
     // Audio fallback
   }
 };
+
+/**
+ * 🐾 Distinct Pet Companion Unlock Celebratory Fanfare (approx 1.2s).
+ * Joyful ascending pentatonic chime (G5 -> B5 -> D6 -> G6 -> B6) with sparkling glass harmonics.
+ */
+export const playPetUnlockSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 783.99, time: 0, dur: 0.8 },      // G5
+      { freq: 987.77, time: 0.09, dur: 0.85 },  // B5
+      { freq: 1174.66, time: 0.18, dur: 0.95 }, // D6
+      { freq: 1567.98, time: 0.28, dur: 1.1 },  // G6
+      { freq: 1975.53, time: 0.40, dur: 1.3 },  // B6 (bright cute sparkle)
+    ];
+
+    notes.forEach(({ freq, time, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + time);
+
+      gain.gain.setValueAtTime(0.0001, now + time);
+      gain.gain.linearRampToValueAtTime(0.12, now + time + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + dur);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + time);
+      osc.stop(now + time + dur + 0.05);
+    });
+
+    // Magical glissando sparkle
+    [2349.32, 3135.96, 3951.07].forEach((sfreq, sidx) => {
+      const sOsc = ctx.createOscillator();
+      const sGain = ctx.createGain();
+
+      sOsc.type = 'triangle';
+      sOsc.frequency.setValueAtTime(sfreq, now + 0.4 + sidx * 0.07);
+
+      sGain.gain.setValueAtTime(0.0001, now + 0.4 + sidx * 0.07);
+      sGain.gain.linearRampToValueAtTime(0.05, now + 0.4 + sidx * 0.07 + 0.01);
+      sGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+      sOsc.connect(sGain);
+      sGain.connect(ctx.destination);
+
+      sOsc.start(now + 0.4 + sidx * 0.07);
+      sOsc.stop(now + 1.25);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * ============================================================================
+ * 🐾 UNIQUE PET EQUIP SOUND EFFECTS (100% Original Web Audio Synthesizers)
+ * ============================================================================
+ */
+
+// Last played timestamp to prevent rapid click overlapping
+let lastPetSoundTime = 0;
+const PET_SOUND_DEBOUNCE_MS = 120;
+
+const shouldThrottlePetSound = (): boolean => {
+  const now = Date.now();
+  if (now - lastPetSoundTime < PET_SOUND_DEBOUNCE_MS) {
+    return true;
+  }
+  lastPetSoundTime = now;
+  return false;
+};
+
+/**
+ * 🐰 1. BUNBUN: Cute soft hop + clover chime (approx 0.35s)
+ * Dual bouncy spring pitch sweep followed by high bell chime.
+ */
+export const playBunbunEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Hop 1 (Low bouncy sine)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(523.25, now); // C5
+    osc1.frequency.exponentialRampToValueAtTime(783.99, now + 0.08); // G5
+    gain1.gain.setValueAtTime(0.001, now);
+    gain1.gain.linearRampToValueAtTime(0.12, now + 0.02);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.15);
+
+    // Hop 2 (Higher joyful hop)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(659.25, now + 0.07); // E5
+    osc2.frequency.exponentialRampToValueAtTime(1046.50, now + 0.16); // C6
+    gain2.gain.setValueAtTime(0.001, now + 0.07);
+    gain2.gain.linearRampToValueAtTime(0.14, now + 0.09);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.07);
+    osc2.stop(now + 0.28);
+
+    // Clover Chime Bell (Sweet high overtone)
+    const bell = ctx.createOscillator();
+    const bellGain = ctx.createGain();
+    bell.type = 'sine';
+    bell.frequency.setValueAtTime(1318.51, now + 0.14); // E6
+    bellGain.gain.setValueAtTime(0.001, now + 0.14);
+    bellGain.gain.linearRampToValueAtTime(0.08, now + 0.16);
+    bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+    bell.connect(bellGain);
+    bellGain.connect(ctx.destination);
+    bell.start(now + 0.14);
+    bell.stop(now + 0.40);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐱 2. MEWMI: Playful magical meow + stardust chime (approx 0.38s)
+ * Formant pitch slide mimicking a cute kitten mew with harmonic bell resonance.
+ */
+export const playMewmiEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Meow glide fundamental (sine with pitch contour)
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(680, now);
+    osc.frequency.exponentialRampToValueAtTime(1150, now + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(890, now + 0.24);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.04);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.14);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.30);
+
+    // Harmonic twinkle sparkle
+    [987.77, 1318.51, 1567.98].forEach((freq, idx) => {
+      const spk = ctx.createOscillator();
+      const spkGain = ctx.createGain();
+      spk.type = 'triangle';
+      spk.frequency.setValueAtTime(freq, now + 0.08 + idx * 0.05);
+
+      spkGain.gain.setValueAtTime(0.001, now + 0.08 + idx * 0.05);
+      spkGain.gain.linearRampToValueAtTime(0.06, now + 0.08 + idx * 0.05 + 0.01);
+      spkGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+
+      spk.connect(spkGain);
+      spkGain.connect(ctx.destination);
+      spk.start(now + 0.08 + idx * 0.05);
+      spk.stop(now + 0.38);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🦊 3. FOXLET: Quick playful sparkle + airy whoosh (approx 0.32s)
+ * Airy frequency sweep with cascading ember sparkle bells.
+ */
+export const playFoxletEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Airy upward whoosh sweep
+    const whoosh = ctx.createOscillator();
+    const whooshGain = ctx.createGain();
+    whoosh.type = 'triangle';
+    whoosh.frequency.setValueAtTime(320, now);
+    whoosh.frequency.exponentialRampToValueAtTime(1450, now + 0.14);
+
+    whooshGain.gain.setValueAtTime(0.001, now);
+    whooshGain.gain.linearRampToValueAtTime(0.10, now + 0.04);
+    whooshGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+    whoosh.connect(whooshGain);
+    whooshGain.connect(ctx.destination);
+    whoosh.start(now);
+    whoosh.stop(now + 0.20);
+
+    // Cascading bright sparkle bells
+    const sparkles = [880.0, 1108.73, 1318.51, 1760.0];
+    sparkles.forEach((freq, idx) => {
+      const bell = ctx.createOscillator();
+      const bellGain = ctx.createGain();
+      bell.type = 'sine';
+      bell.frequency.setValueAtTime(freq, now + 0.05 + idx * 0.04);
+
+      bellGain.gain.setValueAtTime(0.001, now + 0.05 + idx * 0.04);
+      bellGain.gain.linearRampToValueAtTime(0.07, now + 0.05 + idx * 0.04 + 0.01);
+      bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+
+      bell.connect(bellGain);
+      bellGain.connect(ctx.destination);
+      bell.start(now + 0.05 + idx * 0.04);
+      bell.stop(now + 0.34);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐶 4. FLUFFO: Cheerful bark + joyful chime (approx 0.36s)
+ * Double bouncy dog bark frequency pulse + major third celebration chime.
+ */
+export const playFluffoEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Bark 1 ("Arf")
+    const bark1 = ctx.createOscillator();
+    const barkGain1 = ctx.createGain();
+    bark1.type = 'triangle';
+    bark1.frequency.setValueAtTime(360, now);
+    bark1.frequency.exponentialRampToValueAtTime(560, now + 0.04);
+    bark1.frequency.exponentialRampToValueAtTime(300, now + 0.09);
+
+    barkGain1.gain.setValueAtTime(0.001, now);
+    barkGain1.gain.linearRampToValueAtTime(0.16, now + 0.02);
+    barkGain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+
+    bark1.connect(barkGain1);
+    barkGain1.connect(ctx.destination);
+    bark1.start(now);
+    bark1.stop(now + 0.12);
+
+    // Bark 2 (Higher joyful "Arf!")
+    const bark2 = ctx.createOscillator();
+    const barkGain2 = ctx.createGain();
+    bark2.type = 'triangle';
+    bark2.frequency.setValueAtTime(440, now + 0.10);
+    bark2.frequency.exponentialRampToValueAtTime(680, now + 0.14);
+    bark2.frequency.exponentialRampToValueAtTime(380, now + 0.20);
+
+    barkGain2.gain.setValueAtTime(0.001, now + 0.10);
+    barkGain2.gain.linearRampToValueAtTime(0.18, now + 0.12);
+    barkGain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+    bark2.connect(barkGain2);
+    barkGain2.connect(ctx.destination);
+    bark2.start(now + 0.10);
+    bark2.stop(now + 0.24);
+
+    // Warm joyful chime tail
+    const chime = ctx.createOscillator();
+    const chimeGain = ctx.createGain();
+    chime.type = 'sine';
+    chime.frequency.setValueAtTime(1174.66, now + 0.16); // D6
+    chimeGain.gain.setValueAtTime(0.001, now + 0.16);
+    chimeGain.gain.linearRampToValueAtTime(0.09, now + 0.18);
+    chimeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+    chime.connect(chimeGain);
+    chimeGain.connect(ctx.destination);
+    chime.start(now + 0.16);
+    chime.stop(now + 0.38);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐸 5. FROGO: Playful bubbly ribbit + water plops (approx 0.35s)
+ * Modulated bandpass croak with bouncy water droplet pops.
+ */
+export const playFrogoEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Ribbit fundamental croak
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.linearRampToValueAtTime(380, now + 0.05);
+    osc.frequency.linearRampToValueAtTime(290, now + 0.11);
+
+    // Soft lowpass filter to make it quacky/bubbly
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(700, now);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.16);
+
+    // Water droplet plop 1
+    const plop1 = ctx.createOscillator();
+    const plopGain1 = ctx.createGain();
+    plop1.type = 'sine';
+    plop1.frequency.setValueAtTime(780, now + 0.12);
+    plop1.frequency.exponentialRampToValueAtTime(1450, now + 0.18);
+    plopGain1.gain.setValueAtTime(0.001, now + 0.12);
+    plopGain1.gain.linearRampToValueAtTime(0.10, now + 0.14);
+    plopGain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+    plop1.connect(plopGain1);
+    plopGain1.connect(ctx.destination);
+    plop1.start(now + 0.12);
+    plop1.stop(now + 0.25);
+
+    // Water droplet plop 2 (higher splash)
+    const plop2 = ctx.createOscillator();
+    const plopGain2 = ctx.createGain();
+    plop2.type = 'sine';
+    plop2.frequency.setValueAtTime(1100, now + 0.19);
+    plop2.frequency.exponentialRampToValueAtTime(1850, now + 0.26);
+    plopGain2.gain.setValueAtTime(0.001, now + 0.19);
+    plopGain2.gain.linearRampToValueAtTime(0.09, now + 0.21);
+    plopGain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+    plop2.connect(plopGain2);
+    plopGain2.connect(ctx.destination);
+    plop2.start(now + 0.19);
+    plop2.stop(now + 0.36);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🦉 6. OWLIO: Soft mysterious owl hoot + magical chime (approx 0.44s)
+ * Dual-tone resonant sine hoot glide with harmonic wisdom bell.
+ */
+export const playOwlioEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Hoot 1 (Warm gentle "Hoo")
+    const hoot1 = ctx.createOscillator();
+    const hootGain1 = ctx.createGain();
+    hoot1.type = 'sine';
+    hoot1.frequency.setValueAtTime(540, now);
+    hoot1.frequency.linearRampToValueAtTime(490, now + 0.10);
+
+    hootGain1.gain.setValueAtTime(0.001, now);
+    hootGain1.gain.linearRampToValueAtTime(0.12, now + 0.03);
+    hootGain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+    hoot1.connect(hootGain1);
+    hootGain1.connect(ctx.destination);
+    hoot1.start(now);
+    hoot1.stop(now + 0.13);
+
+    // Hoot 2 (Higher mysterious "Hooo")
+    const hoot2 = ctx.createOscillator();
+    const hootGain2 = ctx.createGain();
+    hoot2.type = 'sine';
+    hoot2.frequency.setValueAtTime(660, now + 0.11);
+    hoot2.frequency.linearRampToValueAtTime(580, now + 0.24);
+
+    hootGain2.gain.setValueAtTime(0.001, now + 0.11);
+    hootGain2.gain.linearRampToValueAtTime(0.14, now + 0.14);
+    hootGain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+    hoot2.connect(hootGain2);
+    hootGain2.connect(ctx.destination);
+    hoot2.start(now + 0.11);
+    hoot2.stop(now + 0.30);
+
+    // Ethereal Wisdom Chime Arpeggio
+    const chimes = [987.77, 1174.66, 1479.98]; // B5, D6, F#6
+    chimes.forEach((freq, idx) => {
+      const bell = ctx.createOscillator();
+      const bellGain = ctx.createGain();
+      bell.type = 'triangle';
+      bell.frequency.setValueAtTime(freq, now + 0.16 + idx * 0.06);
+
+      bellGain.gain.setValueAtTime(0.001, now + 0.16 + idx * 0.06);
+      bellGain.gain.linearRampToValueAtTime(0.06, now + 0.16 + idx * 0.06 + 0.01);
+      bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.44);
+
+      bell.connect(bellGain);
+      bellGain.connect(ctx.destination);
+      bell.start(now + 0.16 + idx * 0.06);
+      bell.stop(now + 0.46);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🌙 7. MOONPAW: Dreamy moonlike celestial sound (approx 0.50s)
+ * Deep twilight shimmer swelling into rich crystalline harmonic chord.
+ */
+export const playMoonpawEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Sub-bass twilight shimmer
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(220, now); // A3
+    sub.frequency.exponentialRampToValueAtTime(440, now + 0.25); // A4
+
+    subGain.gain.setValueAtTime(0.001, now);
+    subGain.gain.linearRampToValueAtTime(0.11, now + 0.08);
+    subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+    sub.connect(subGain);
+    subGain.connect(ctx.destination);
+    sub.start(now);
+    sub.stop(now + 0.36);
+
+    // Shimmering Lunar Chords (Amaj7: A5, C#6, E6, G#6)
+    const lunarHarmonics = [880.0, 1108.73, 1318.51, 1661.22];
+    lunarHarmonics.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + 0.06 + idx * 0.04);
+
+      gain.gain.setValueAtTime(0.001, now + 0.06 + idx * 0.04);
+      gain.gain.linearRampToValueAtTime(0.07, now + 0.06 + idx * 0.04 + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.50);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + 0.06 + idx * 0.04);
+      osc.stop(now + 0.52);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🔥 8. FLAMELING: Warm fire whoosh + crackling ember pops (approx 0.36s)
+ * Resonant rising heat wave with rapid crackle pops.
+ */
+export const playFlamelingEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Heat surge whoosh
+    const whoosh = ctx.createOscillator();
+    const whooshGain = ctx.createGain();
+    whoosh.type = 'sawtooth';
+    whoosh.frequency.setValueAtTime(180, now);
+    whoosh.frequency.exponentialRampToValueAtTime(620, now + 0.12);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.linearRampToValueAtTime(1600, now + 0.10);
+
+    whooshGain.gain.setValueAtTime(0.001, now);
+    whooshGain.gain.linearRampToValueAtTime(0.12, now + 0.03);
+    whooshGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+    whoosh.connect(filter);
+    filter.connect(whooshGain);
+    whooshGain.connect(ctx.destination);
+    whoosh.start(now);
+    whoosh.stop(now + 0.24);
+
+    // Rapid crackling ember sparks
+    const embers = [1200, 1850, 2400, 1600];
+    embers.forEach((freq, idx) => {
+      const ember = ctx.createOscillator();
+      const emberGain = ctx.createGain();
+      ember.type = 'triangle';
+      ember.frequency.setValueAtTime(freq, now + 0.06 + idx * 0.05);
+
+      emberGain.gain.setValueAtTime(0.001, now + 0.06 + idx * 0.05);
+      emberGain.gain.linearRampToValueAtTime(0.08, now + 0.06 + idx * 0.05 + 0.005);
+      emberGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06 + idx * 0.05 + 0.08);
+
+      ember.connect(emberGain);
+      emberGain.connect(ctx.destination);
+      ember.start(now + 0.06 + idx * 0.05);
+      ember.stop(now + 0.06 + idx * 0.05 + 0.10);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * ⚡ 9. VOLTARI: Energetic electric zap + lightning spark (approx 0.32s)
+ * Fast frequency sawtooth lightning dive + high-voltage static pop.
+ */
+export const playVoltariEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Lightning zap frequency drop
+    const zap = ctx.createOscillator();
+    const zapGain = ctx.createGain();
+    zap.type = 'sawtooth';
+    zap.frequency.setValueAtTime(2800, now);
+    zap.frequency.exponentialRampToValueAtTime(280, now + 0.08);
+
+    zapGain.gain.setValueAtTime(0.001, now);
+    zapGain.gain.linearRampToValueAtTime(0.18, now + 0.01);
+    zapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+    zap.connect(zapGain);
+    zapGain.connect(ctx.destination);
+    zap.start(now);
+    zap.stop(now + 0.16);
+
+    // Electric sparks
+    [2400, 3600, 1900].forEach((freq, idx) => {
+      const spark = ctx.createOscillator();
+      const sparkGain = ctx.createGain();
+      spark.type = 'square';
+      spark.frequency.setValueAtTime(freq, now + 0.05 + idx * 0.04);
+
+      sparkGain.gain.setValueAtTime(0.001, now + 0.05 + idx * 0.04);
+      sparkGain.gain.linearRampToValueAtTime(0.06, now + 0.05 + idx * 0.04 + 0.005);
+      sparkGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+      spark.connect(sparkGain);
+      sparkGain.connect(ctx.destination);
+      spark.start(now + 0.05 + idx * 0.04);
+      spark.stop(now + 0.30);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐉 10. DRAKORI: Powerful dragon roar + celestial impact gong (approx 0.65s)
+ * Deep brassy sub-bass growl with shimmering celestial overtone harmonics.
+ */
+export const playDrakoriEquipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+
+    // Deep dragon roar sub-bass growl
+    const growl = ctx.createOscillator();
+    const growlGain = ctx.createGain();
+    growl.type = 'sawtooth';
+    growl.frequency.setValueAtTime(120, now);
+    growl.frequency.linearRampToValueAtTime(175, now + 0.08);
+    growl.frequency.exponentialRampToValueAtTime(55, now + 0.40);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(400, now);
+    filter.frequency.linearRampToValueAtTime(900, now + 0.10);
+    filter.frequency.exponentialRampToValueAtTime(200, now + 0.45);
+
+    growlGain.gain.setValueAtTime(0.001, now);
+    growlGain.gain.linearRampToValueAtTime(0.22, now + 0.04);
+    growlGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.48);
+
+    growl.connect(filter);
+    filter.connect(growlGain);
+    growlGain.connect(ctx.destination);
+    growl.start(now);
+    growl.stop(now + 0.50);
+
+    // Majestic Celestial Chime Chords (Royal Dragon Gong)
+    const dragonChimes = [523.25, 659.25, 783.99, 1046.50, 1567.98]; // C5, E5, G5, C6, G6
+    dragonChimes.forEach((freq, idx) => {
+      const gong = ctx.createOscillator();
+      const gongGain = ctx.createGain();
+      gong.type = 'triangle';
+      gong.frequency.setValueAtTime(freq, now + 0.08 + idx * 0.03);
+
+      gongGain.gain.setValueAtTime(0.001, now + 0.08 + idx * 0.03);
+      gongGain.gain.linearRampToValueAtTime(0.08, now + 0.08 + idx * 0.03 + 0.02);
+      gongGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
+
+      gong.connect(gongGain);
+      gongGain.connect(ctx.destination);
+      gong.start(now + 0.08 + idx * 0.03);
+      gong.stop(now + 0.68);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐾 Soft Unequip Pop Sound (approx 0.18s)
+ */
+export const playPetUnequipSound = () => {
+  if (shouldThrottlePetSound()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(783.99, now); // G5
+    osc.frequency.exponentialRampToValueAtTime(392.00, now + 0.08); // G4 gentle downward pop
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.09, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.18);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐾 Centralized Pet Equip Sound Dispatcher
+ * Plays the exact unique audio personality for the equipped creature.
+ */
+export const playPetUniqueEquipSound = (petId: string | null | undefined) => {
+  if (!petId) {
+    playPetUnequipSound();
+    return;
+  }
+
+  switch (petId.toLowerCase()) {
+    case 'bunbun':
+      playBunbunEquipSound();
+      break;
+    case 'mewmi':
+      playMewmiEquipSound();
+      break;
+    case 'foxlet':
+      playFoxletEquipSound();
+      break;
+    case 'fluffo':
+      playFluffoEquipSound();
+      break;
+    case 'frogo':
+      playFrogoEquipSound();
+      break;
+    case 'owlio':
+      playOwlioEquipSound();
+      break;
+    case 'moonpaw':
+      playMoonpawEquipSound();
+      break;
+    case 'flameling':
+      playFlamelingEquipSound();
+      break;
+    case 'voltari':
+      playVoltariEquipSound();
+      break;
+    case 'drakori':
+      playDrakoriEquipSound();
+      break;
+    default:
+      playBunbunEquipSound();
+      break;
+  }
+};
+
+// Legacy fallback alias
+export const playPetEquipSound = playBunbunEquipSound;
+
+/**
+ * ============================================================================
+ * 🐾 PET MOVEMENT & AMBIENT VOCALIZATIONS (While moving around the map)
+ * Multi-variation procedural synthesizers so every companion feels truly alive!
+ * ============================================================================
+ */
+
+let lastPetMovementSoundTime = 0;
+const PET_MOVEMENT_THROTTLE_MS = 2200; // Lively, responsive 2.2s minimum spacing between movement barks/chirps
+
+/**
+ * 🐰 1. BUNBUN (Bunny): Lively springy hops, cute squeaks & sweet clover chimes
+ */
+export const playBunbunAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const variant = Math.random();
+
+    if (variant < 0.5) {
+      // Variation A: Double Springy Squeak Hop
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(659.25, now); // E5
+      osc1.frequency.exponentialRampToValueAtTime(1046.50, now + 0.07); // C6
+      gain1.gain.setValueAtTime(0.001, now);
+      gain1.gain.linearRampToValueAtTime(0.09, now + 0.02);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.16);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(783.99, now + 0.08); // G5
+      osc2.frequency.exponentialRampToValueAtTime(1318.51, now + 0.16); // E6
+      gain2.gain.setValueAtTime(0.001, now + 0.08);
+      gain2.gain.linearRampToValueAtTime(0.10, now + 0.10);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.08);
+      osc2.stop(now + 0.24);
+    } else {
+      // Variation B: Joyful Clover Hop Bell
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880.0, now); // A5
+      osc.frequency.exponentialRampToValueAtTime(1479.98, now + 0.09); // F#6
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.08, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.22);
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐶 2. FLUFFO (Doggo): Lively cheerful puppy barks & trotting yips ("Woof! Yip-arf!")
+ */
+export const playFluffoAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const variant = Math.random();
+
+    if (variant < 0.35) {
+      // Variation A: Cheerful Double Bark ("Arf-arf!")
+      [0, 0.09].forEach((offset, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(360 + idx * 60, now + offset);
+        osc.frequency.exponentialRampToValueAtTime(620 + idx * 80, now + offset + 0.04);
+        osc.frequency.exponentialRampToValueAtTime(320, now + offset + 0.08);
+
+        gain.gain.setValueAtTime(0.001, now + offset);
+        gain.gain.linearRampToValueAtTime(0.14, now + offset + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.09);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.10);
+      });
+    } else if (variant < 0.7) {
+      // Variation B: Happy High Yip ("Yip!")
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(780, now + 0.05);
+      osc.frequency.exponentialRampToValueAtTime(380, now + 0.12);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.16);
+    } else {
+      // Variation C: Playful Puppy Woof ("Woof!")
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(540, now + 0.06);
+      osc.frequency.exponentialRampToValueAtTime(260, now + 0.15);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, now);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.13, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.18);
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐱 3. MEWMI (Cat): Cute playful kitten mews & warm purring rhythm
+ */
+export const playMewmiAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const variant = Math.random();
+
+    if (variant < 0.6) {
+      // Variation A: Cute ascending kitten "mew!"
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(740, now);
+      osc.frequency.exponentialRampToValueAtTime(1180, now + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.18);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.10, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.22);
+    } else {
+      // Variation B: Playful double chirp mew ("Mrr-mew!")
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(580, now);
+      osc.frequency.linearRampToValueAtTime(880, now + 0.06);
+      osc.frequency.exponentialRampToValueAtTime(1320, now + 0.14);
+      osc.frequency.exponentialRampToValueAtTime(950, now + 0.22);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.11, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.26);
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🦊 4. FOXLET (Fox): Quick playful ember fox yelps & chitters ("Yip-yap!")
+ */
+export const playFoxletAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const variant = Math.random();
+
+    if (variant < 0.5) {
+      // Variation A: High Fox Yip
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(480, now);
+      osc.frequency.exponentialRampToValueAtTime(1350, now + 0.06);
+      osc.frequency.exponentialRampToValueAtTime(820, now + 0.14);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.11, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.18);
+    } else {
+      // Variation B: Playful Double Fox Chitter ("Yip-yap!")
+      [0, 0.07].forEach((offset, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(520 + idx * 80, now + offset);
+        osc.frequency.exponentialRampToValueAtTime(1200 + idx * 100, now + offset + 0.03);
+        osc.frequency.exponentialRampToValueAtTime(740, now + offset + 0.06);
+
+        gain.gain.setValueAtTime(0.001, now + offset);
+        gain.gain.linearRampToValueAtTime(0.09, now + offset + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.07);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.08);
+      });
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐸 5. FROGO (Frog): Comical squishy plop leaps & animated ribbit croaks ("Ribb-it! Croak-plop!")
+ */
+export const playFrogoAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const variant = Math.random();
+
+    if (variant < 0.5) {
+      // Variation A: Resonant Animated Croak ("Ribb-it!")
+      const osc = ctx.createOscillator();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.linearRampToValueAtTime(420, now + 0.06);
+      osc.frequency.linearRampToValueAtTime(300, now + 0.13);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(750, now);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.11, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.17);
+    } else {
+      // Variation B: Water Droplet Plop Leap ("Plop-blip!")
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(680, now);
+      osc.frequency.exponentialRampToValueAtTime(1550, now + 0.08);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.10, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.18);
+    }
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🦉 6. OWLIO (Owl): Soft curious owl hoots & wisdom chirps ("Hoo-hoo-hoot!")
+ */
+export const playOwlioAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(580, now);
+    osc.frequency.linearRampToValueAtTime(510, now + 0.07);
+    osc.frequency.linearRampToValueAtTime(660, now + 0.13);
+    osc.frequency.linearRampToValueAtTime(560, now + 0.22);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.10, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.24);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🌙 7. MOONPAW (Panther): Deep celestial starlight purr & smooth panther chuff
+ */
+export const playMoonpawAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(280, now);
+    osc.frequency.exponentialRampToValueAtTime(620, now + 0.10);
+    osc.frequency.exponentialRampToValueAtTime(390, now + 0.24);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.09, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.28);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🔥 8. FLAMELING (Fire Sprite): Warm fiery ember puffs & whistling spark pops
+ */
+export const playFlamelingAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(280, now);
+    osc.frequency.exponentialRampToValueAtTime(760, now + 0.06);
+    osc.frequency.exponentialRampToValueAtTime(410, now + 0.14);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.10, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * ⚡ 9. VOLTARI (Electric Lynx): Zippy electric spark chirps & static crackle
+ */
+export const playVoltariAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(1900, now);
+    osc.frequency.exponentialRampToValueAtTime(460, now + 0.07);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.10, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐉 10. DRAKORI (Dragon): Majestic baby dragon rumble purr & celestial ember breath
+ */
+export const playDrakoriAmbientSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(130, now);
+    osc.frequency.linearRampToValueAtTime(195, now + 0.08);
+    osc.frequency.exponentialRampToValueAtTime(75, now + 0.24);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(420, now);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.30);
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🐾 Centralized Movement Vocalization Dispatcher (Called while moving around the map)
+ */
+export const playPetMovementVocalization = (
+  petId: string | null | undefined,
+  options?: { force?: boolean }
+) => {
+  if (!petId) return;
+
+  const now = Date.now();
+  if (!options?.force && now - lastPetMovementSoundTime < PET_MOVEMENT_THROTTLE_MS) {
+    return;
+  }
+  lastPetMovementSoundTime = now;
+
+  switch (petId.toLowerCase()) {
+    case 'bunbun':
+      playBunbunAmbientSound();
+      break;
+    case 'fluffo':
+      playFluffoAmbientSound();
+      break;
+    case 'mewmi':
+      playMewmiAmbientSound();
+      break;
+    case 'foxlet':
+      playFoxletAmbientSound();
+      break;
+    case 'frogo':
+      playFrogoAmbientSound();
+      break;
+    case 'owlio':
+      playOwlioAmbientSound();
+      break;
+    case 'moonpaw':
+      playMoonpawAmbientSound();
+      break;
+    case 'flameling':
+      playFlamelingAmbientSound();
+      break;
+    case 'voltari':
+      playVoltariAmbientSound();
+      break;
+    case 'drakori':
+      playDrakoriAmbientSound();
+      break;
+    default:
+      playBunbunAmbientSound();
+      break;
+  }
+};
+
+/**
+ * 🛍️ Character Cosmetic Purchase / Equip Fanfare (Crisp coin jingle + wardrobe sparkle)
+ */
+export const playCosmeticPurchaseSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    // Coin clink
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(987.77, now); // B5
+    osc1.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+    gain1.gain.setValueAtTime(0.001, now);
+    gain1.gain.linearRampToValueAtTime(0.14, now + 0.02);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.36);
+
+    // Sparkle shimmer
+    [1567.98, 1975.53, 2349.32].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + 0.08 + i * 0.06);
+      gain.gain.setValueAtTime(0.001, now + 0.08 + i * 0.06);
+      gain.gain.linearRampToValueAtTime(0.08, now + 0.10 + i * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32 + i * 0.06);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + 0.08 + i * 0.06);
+      osc.stop(now + 0.34 + i * 0.06);
+    });
+  } catch {
+    // Audio fallback
+  }
+};
+
+/**
+ * 🏠 Cozy Home Enter Jingle (Warm gentle chord arpeggio)
+ */
+export const playHomeEnterSound = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const chords = [
+      { freq: 440.0, time: 0 },    // A4
+      { freq: 554.37, time: 0.09 }, // C#5
+      { freq: 659.25, time: 0.18 }, // E5
+      { freq: 880.0, time: 0.28 },  // A5
+    ];
+
+    chords.forEach(({ freq, time }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + time);
+      gain.gain.setValueAtTime(0.001, now + time);
+      gain.gain.linearRampToValueAtTime(0.10, now + time + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + time);
+      osc.stop(now + time + 0.52);
+    });
+  } catch {
+    // Audio fallback
+  }
+};

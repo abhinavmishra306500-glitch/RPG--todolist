@@ -37,6 +37,7 @@ import {
   stopMythicalCastleMusic,
   playMythicalNodeArriveSound,
   playMythicalStepSound,
+  playPetMovementVocalization,
 } from '../../utils/soundEffects';
 import {
   ArrowLeft,
@@ -55,6 +56,10 @@ interface WorldMapViewProps {
   onUpdatePlayer: (player: PlayerState) => void;
   onBackToStats: () => void;
   onOpenQuests: () => void;
+  onOpenCreatureDex?: () => void;
+  onOpenPetShop?: () => void;
+  onOpenHome?: () => void;
+  onOpenShops?: (tab?: 'pets' | 'character' | 'home') => void;
 }
 
 export const WorldMapView: React.FC<WorldMapViewProps> = ({
@@ -62,6 +67,10 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
   onUpdatePlayer,
   onBackToStats,
   onOpenQuests,
+  onOpenCreatureDex,
+  onOpenPetShop,
+  onOpenHome,
+  onOpenShops,
 }) => {
   const mapProgression = normalizeMapProgression(player.map);
 
@@ -172,6 +181,12 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
     initialPosition: currentLevelDef.position,
     onMovementComplete: handleArrival,
   });
+
+  // Ambient pet companion vocalization while walking across the world map
+  useEffect(() => {
+    if (!isSoundOn || !isWalking || !player.pets?.equippedPetId) return;
+    playPetMovementVocalization(player.pets.equippedPetId);
+  }, [isWalking, walkCycle, isSoundOn, player.pets?.equippedPetId]);
 
   const showDevMessage = (msg: string) => {
     setDevToast(msg);
@@ -413,6 +428,45 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
             )}
           </button>
 
+          {/* Home Quick Button */}
+          {onOpenHome && (
+            <button
+              type="button"
+              onClick={onOpenHome}
+              className="flex items-center gap-1.5 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border-2 border-emerald-500/70 px-2.5 py-1.5 rounded-lg shadow-xl transition-all active:scale-95 text-xs font-bold"
+              title="Go to My Home"
+            >
+              <span>🏠</span>
+              <span className="hidden sm:inline">Home</span>
+            </button>
+          )}
+
+          {/* CreatureDex Quick Button */}
+          {onOpenCreatureDex && (
+            <button
+              type="button"
+              onClick={onOpenCreatureDex}
+              className="flex items-center gap-1.5 bg-indigo-950/90 hover:bg-indigo-900 text-indigo-300 border-2 border-indigo-500/70 px-2.5 py-1.5 rounded-lg shadow-xl transition-all active:scale-95 text-xs font-bold"
+              title="Open CreatureDex"
+            >
+              <span>📖</span>
+              <span className="hidden sm:inline">Dex</span>
+            </button>
+          )}
+
+          {/* Shops Quick Button */}
+          {(onOpenShops || onOpenPetShop) && (
+            <button
+              type="button"
+              onClick={() => (onOpenShops ? onOpenShops() : onOpenPetShop?.())}
+              className="flex items-center gap-1.5 bg-amber-950/90 hover:bg-amber-900 text-amber-300 border-2 border-amber-500/70 px-2.5 py-1.5 rounded-lg shadow-xl transition-all active:scale-95 text-xs font-bold"
+              title="Open Shops"
+            >
+              <span>🛍️</span>
+              <span className="hidden sm:inline">Shops</span>
+            </button>
+          )}
+
           {/* World Selector Button */}
           <button
             type="button"
@@ -505,6 +559,7 @@ export const WorldMapView: React.FC<WorldMapViewProps> = ({
                 <WalkingCharacterSprite
                   profile={player.character}
                   league={player.league}
+                  equippedPetId={player.pets?.equippedPetId}
                   facing={facing}
                   isWalking={isWalking}
                   walkCycle={walkCycle}

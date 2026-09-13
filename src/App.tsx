@@ -27,7 +27,22 @@ import { WorldMapView } from './components/map/WorldMapView';
 import { getTodayDateString, applyInactivityDecay, recordDailyActivity } from './utils/streakDecay';
 import { normalizeLeague } from './utils/league';
 import { normalizeMapProgression } from './utils/mapData';
+import { normalizePlayerPets, equipPet } from './utils/petData';
+import { normalizePlayerCosmetics } from './utils/cosmeticsData';
+import { normalizePlayerHome } from './utils/homeData';
+import {
+  playPetUniqueEquipSound,
+  playHomeEnterSound,
+  playLevelUpSound,
+  playStatIncreaseSound,
+} from './utils/soundEffects';
+import { devUnlockAllShopItems, devLockAllShopItems } from './utils/devShopShortcuts';
+import { CreatureDexModal } from './components/pet/CreatureDexModal';
+import { PetUnlockCelebrationModal } from './components/pet/PetUnlockCelebrationModal';
+import { HomeView } from './components/home/HomeView';
+import { ShopsModal, type ShopTab } from './components/shop/ShopsModal';
 import type { PlayerLeague } from './types/progression';
+import type { PetDef } from './types/pet';
 
 const PLAYER_STORAGE_KEY = 'LIFE_RPG_PLAYER_STATE';
 
@@ -38,6 +53,9 @@ const loadSavedPlayerState = (): PlayerState | null => {
       const parsed: PlayerState = JSON.parse(saved);
       parsed.league = normalizeLeague(parsed.league);
       parsed.map = normalizeMapProgression(parsed.map);
+      parsed.pets = normalizePlayerPets(parsed.pets);
+      parsed.cosmetics = normalizePlayerCosmetics(parsed.cosmetics);
+      parsed.home = normalizePlayerHome(parsed.home);
       const { updatedPlayer } = applyInactivityDecay(parsed, getTodayDateString());
       return updatedPlayer;
     }
@@ -47,7 +65,7 @@ const loadSavedPlayerState = (): PlayerState | null => {
   return null;
 };
 
-type AppScreen = 'login' | 'character_creation' | 'character_created' | 'character_stats' | 'quest_page' | 'world_map';
+type AppScreen = 'login' | 'character_creation' | 'character_created' | 'character_stats' | 'quest_page' | 'world_map' | 'home';
 
 export const App: React.FC = () => {
   const [screen, setScreen] = useState<AppScreen>('login');
@@ -59,6 +77,8 @@ export const App: React.FC = () => {
   const [playerName, setPlayerName] = useState('');
   const [quests, setQuests] = useState<Quest[]>(() => loadQuestsWithDailyRefresh());
   const [isAddQuestOpen, setIsAddQuestOpen] = useState(false);
+  const [isShopsOpen, setIsShopsOpen] = useState(false);
+  const [shopsInitialTab, setShopsInitialTab] = useState<ShopTab>('pets');
   const [activeReward, setActiveReward] = useState<{
     questTitle: string;
     reward: QuestReward;
@@ -83,6 +103,45 @@ export const App: React.FC = () => {
     oldLeague: PlayerLeague;
     newLeague: PlayerLeague;
   } | null>(null);
+  const [isCreatureDexOpen, setIsCreatureDexOpen] = useState(false);
+  const [unlockedPetCelebration, setUnlockedPetCelebration] = useState<PetDef | null>(null);
+  const [globalDevToast, setGlobalDevToast] = useState<string | null>(null);
+
+  const showGlobalDevToast = (msg: string) => {
+    setGlobalDevToast(msg);
+    setTimeout(() => setGlobalDevToast(null), 3000);
+  };
+
+  // Global Developer Hotkeys:
+  // Shift+U -> Unlock All Pets & Character Cosmetics + 50,000 Gold
+  // Shift+L -> Lock All Pets & Character Cosmetics to Starter Defaults
+  useEffect(() => {
+    const handleGlobalDevKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        return;
+      }
+
+      if (e.shiftKey && (e.key === 'U' || e.key === 'u')) {
+        e.preventDefault();
+        const basePlayer = playerState || createInitialPlayerState(characterProfile || DEFAULT_CHARACTER);
+        const { updatedPlayer, message } = devUnlockAllShopItems(basePlayer);
+        playLevelUpSound();
+        setPlayerState(updatedPlayer);
+        showGlobalDevToast(message);
+      } else if (e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+        e.preventDefault();
+        const basePlayer = playerState || createInitialPlayerState(characterProfile || DEFAULT_CHARACTER);
+        const { updatedPlayer, message } = devLockAllShopItems(basePlayer);
+        playStatIncreaseSound();
+        setPlayerState(updatedPlayer);
+        showGlobalDevToast(message);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalDevKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalDevKeyDown);
+  }, [playerState, characterProfile]);
 
   // Apply daily decay on mount if player state is present
   useEffect(() => {
@@ -278,10 +337,71 @@ export const App: React.FC = () => {
     setQuests((prev) => prev.filter((q) => q.id !== id));
   };
 
+  // Pet system handlers
+  const handleEquipPet = (petId: string) => {
+    if (!playerState) return;
+    // If the same pet is already equipped, do not play the equip sound again
+    if (playerState.pets?.equippedPetId === petId) return;
+
+    const result = equipPet(playerState, petId);
+    if (result.success && result.updatedPlayer) {
+      playPetUniqueEquipSound(petId);
+      setPlayerState(result.updatedPlayer);
+    }
+  };
+
+  const handleUnequipPet = () => {
+    if (!playerState) return;
+    // If no pet is equipped, do nothing
+    if (!playerState.pets?.equippedPetId) return;
+
+    const result = equipPet(playerState, null);
+    if (result.success && result.updatedPlayer) {
+      playPetUniqueEquipSound(null);
+      setPlayerState(result.updatedPlayer);
+    }
+  };
+
+  const handleOpenCreatureDex = () => {
+    setIsCreatureDexOpen(true);
+  };
+
+  const handleOpenPetShop = () => {
+    setShopsInitialTab('pets');
+    setIsShopsOpen(true);
+  };
+
+  const handleOpenHome = () => {
+    if (!playerState) {
+      setPlayerState(createInitialPlayerState(characterProfile || DEFAULT_CHARACTER));
+    }
+    playHomeEnterSound();
+    setScreen('home');
+  };
+
+  const handleOpenShops = (tab: ShopTab = 'pets') => {
+    if (!playerState) {
+      setPlayerState(createInitialPlayerState(characterProfile || DEFAULT_CHARACTER));
+    }
+    setShopsInitialTab(tab);
+    setIsShopsOpen(true);
+  };
+
+  const handlePetUnlocked = (pet: PetDef) => {
+    setUnlockedPetCelebration(pet);
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col justify-between py-6 px-4 sm:px-6 relative overflow-hidden">
       {/* 2D Pixel-Art RPG Overworld Background Environment */}
       <RpgOverworldBackground />
+
+      {/* Global Developer Toast Notification */}
+      {globalDevToast && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[200] px-5 py-2.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs sm:text-sm rounded-full shadow-[0_4px_25px_rgba(245,158,11,0.8)] border-2 border-white animate-bounce pointer-events-none">
+          {globalDevToast}
+        </div>
+      )}
 
       {/* --- SCREEN 1: CHARACTER CREATION --- */}
       {screen === 'character_creation' && (
@@ -310,6 +430,10 @@ export const App: React.FC = () => {
           onEditCharacter={handleEditCharacter}
           onContinueToQuests={() => setScreen('quest_page')}
           onOpenWorldMap={() => setScreen('world_map')}
+          onOpenCreatureDex={handleOpenCreatureDex}
+          onOpenPetShop={handleOpenPetShop}
+          onOpenHome={handleOpenHome}
+          onOpenShops={handleOpenShops}
           onLogOut={handleLogOut}
           onUpdatePlayer={setPlayerState}
           isDevMode={currentRole === 'developer' || activeSession?.role === 'developer'}
@@ -327,6 +451,10 @@ export const App: React.FC = () => {
           onDeleteQuest={handleDeleteQuest}
           onBackToStats={() => setScreen('character_stats')}
           onOpenWorldMap={() => setScreen('world_map')}
+          onOpenCreatureDex={handleOpenCreatureDex}
+          onOpenPetShop={handleOpenPetShop}
+          onOpenHome={handleOpenHome}
+          onOpenShops={handleOpenShops}
         />
       )}
 
@@ -338,11 +466,27 @@ export const App: React.FC = () => {
             onUpdatePlayer={setPlayerState}
             onBackToStats={() => setScreen('character_stats')}
             onOpenQuests={() => setScreen('quest_page')}
+            onOpenCreatureDex={handleOpenCreatureDex}
+            onOpenPetShop={handleOpenPetShop}
+            onOpenHome={handleOpenHome}
+            onOpenShops={handleOpenShops}
           />
         </div>
       )}
 
-      {/* --- SCREEN 6: LOGIN PAGE (Preserved 100%) --- */}
+      {/* --- SCREEN 6: PERSONAL HOME (STEP 18) --- */}
+      {screen === 'home' && playerState && (
+        <HomeView
+          player={playerState}
+          onOpenShops={handleOpenShops}
+          onOpenWorldMap={() => setScreen('world_map')}
+          onOpenQuests={() => setScreen('quest_page')}
+          onOpenStats={() => setScreen('character_stats')}
+          onUpdatePlayer={setPlayerState}
+        />
+      )}
+
+      {/* --- SCREEN 7: LOGIN PAGE (Preserved 100%) --- */}
       {screen === 'login' && (
         <main className="w-full max-w-md mx-auto my-auto relative z-10">
           {/* Game Title & Header */}
@@ -421,6 +565,32 @@ export const App: React.FC = () => {
                     >
                       🗺️ Test World Map & Movement (Dev Mode)
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!playerState) {
+                          setPlayerState(createInitialPlayerState(characterProfile || DEFAULT_CHARACTER));
+                        }
+                        setIsCreatureDexOpen(true);
+                      }}
+                      className="w-full py-2 bg-indigo-900/60 hover:bg-indigo-900/80 border-2 border-indigo-400 text-indigo-200 text-xs font-pixel rounded-none transition-colors"
+                    >
+                      📖 Test CreatureDex (Dev Mode)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenHome()}
+                      className="w-full py-2 bg-emerald-900/60 hover:bg-emerald-900/80 border-2 border-emerald-400 text-emerald-200 text-xs font-pixel rounded-none transition-colors"
+                    >
+                      🏠 Test My Home (Dev Mode)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenShops('pets')}
+                      className="w-full py-2 bg-amber-900/60 hover:bg-amber-900/80 border-2 border-amber-400 text-amber-200 text-xs font-pixel rounded-none transition-colors"
+                    >
+                      🛍️ Test Shops & Bazaar (Dev Mode)
+                    </button>
                   </div>
                 )}
               </div>
@@ -461,10 +631,10 @@ export const App: React.FC = () => {
       {/* Semantic Accessible Footer */}
       <footer className="w-full text-center mt-6 text-xs text-slate-200 relative z-10 select-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
         <p className="font-pixel text-[9px] text-slate-900 tracking-wider font-bold">
-          Life RPG • Step 8: League System (Bronze III → Mythical)
+          Life RPG • Home & Shops Update • Personal Home & Unified Marketplace
         </p>
         <p className="text-[10px] text-slate-800 font-medium mt-1">
-          13 League ranks based on consistency, promotion/demotion feedback, completely separate from Level/XP.
+          Cozy hero haven, equipped pets, character cosmetics shop, and pet adoption catalog.
         </p>
       </footer>
 
@@ -516,6 +686,43 @@ export const App: React.FC = () => {
         oldLeague={activeLeagueModal?.oldLeague || { tier: 'Bronze', division: 'III' }}
         newLeague={activeLeagueModal?.newLeague || { tier: 'Bronze', division: 'III' }}
       />
+
+      {/* --- CREATUREDEX MODAL (STEP 10: PET SYSTEM) --- */}
+      {playerState && (
+        <CreatureDexModal
+          isOpen={isCreatureDexOpen}
+          onClose={() => setIsCreatureDexOpen(false)}
+          player={playerState}
+          onEquipPet={handleEquipPet}
+          onUnequipPet={handleUnequipPet}
+          onOpenPetShop={() => handleOpenShops('pets')}
+        />
+      )}
+
+      {/* --- SHOPS & BAZAAR MODAL (STEP 19: SHOPS) --- */}
+      {playerState && (
+        <ShopsModal
+          isOpen={isShopsOpen}
+          onClose={() => setIsShopsOpen(false)}
+          player={playerState}
+          onUpdatePlayer={setPlayerState}
+          onOpenCreatureDex={handleOpenCreatureDex}
+          onPetUnlocked={handlePetUnlocked}
+          completedQuestsCount={quests.filter((q) => q.completed).length}
+          initialTab={shopsInitialTab}
+        />
+      )}
+
+      {/* --- PET UNLOCK CELEBRATION MODAL --- */}
+      {playerState && (
+        <PetUnlockCelebrationModal
+          pet={unlockedPetCelebration}
+          onClose={() => setUnlockedPetCelebration(null)}
+          onEquip={handleEquipPet}
+          onOpenDex={handleOpenCreatureDex}
+          isEquipped={playerState.pets?.equippedPetId === unlockedPetCelebration?.id}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,8 @@
 import type { CharacterProfile } from './character';
 import type { MapProgressionState } from './map';
+import type { PlayerPetsState } from './pet';
+import type { PlayerCosmeticsState } from './cosmetics';
+import type { PlayerHomeState } from './home';
 
 export type LeagueTier = 'Bronze' | 'Silver' | 'Gold' | 'Diamond' | 'Mythical';
 export type LeagueDivision = 'III' | 'II' | 'I';
@@ -43,6 +46,9 @@ export interface PlayerState {
   consistency: PlayerConsistency;
   league: PlayerLeague;
   map?: MapProgressionState;
+  pets?: PlayerPetsState;
+  cosmetics?: PlayerCosmeticsState;
+  home?: PlayerHomeState;
 }
 
 export interface LeagueConfig {

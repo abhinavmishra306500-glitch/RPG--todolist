@@ -9,6 +9,8 @@ import {
 } from '../../types/character';
 import { LeagueShieldSvg } from '../character/LeagueShield';
 
+import { PetSprite } from '../pet/PetSprite';
+
 interface WalkingCharacterSpriteProps {
   profile: CharacterProfile;
   league?: Partial<PlayerLeague> | null;
@@ -17,6 +19,7 @@ interface WalkingCharacterSpriteProps {
   walkCycle?: number; // 0 to 1 continuous or step index
   size?: number; // Default 64px
   showShadow?: boolean;
+  equippedPetId?: string | null;
 }
 
 export const WalkingCharacterSprite: React.FC<WalkingCharacterSpriteProps> = ({
@@ -27,6 +30,7 @@ export const WalkingCharacterSprite: React.FC<WalkingCharacterSpriteProps> = ({
   walkCycle = 0,
   size = 56,
   showShadow = true,
+  equippedPetId,
 }) => {
   const skin = SKIN_TONES.find((s) => s.id === profile.skinToneId) || SKIN_TONES[0];
   const hair = HAIR_COLORS.find((h) => h.id === profile.hairColorId) || HAIR_COLORS[0];
@@ -40,7 +44,7 @@ export const WalkingCharacterSprite: React.FC<WalkingCharacterSpriteProps> = ({
   const bodyBob = isWalking ? Math.abs(Math.sin(phase * 2)) * 2 : 0; // Vertical bounce
 
   // Companion pet follow bounce
-  const petBounce = isWalking ? Math.sin(phase + 1) * 3 : Math.sin(Date.now() / 300) * 1.5;
+  const petBounce = isWalking ? Math.sin(phase + 1) * 3 : 0;
 
   return (
     <div
@@ -274,26 +278,30 @@ export const WalkingCharacterSprite: React.FC<WalkingCharacterSpriteProps> = ({
             </g>
           )}
         </g>
-
-        {/* =================================================================== */}
-        {/* COMPANION PET: Cute Loyal Sprite bouncing right behind character    */}
-        {/* =================================================================== */}
-        <g transform={`translate(14, ${68 - petBounce})`}>
-          {/* Pet shadow */}
-          <ellipse cx="0" cy="16" rx="8" ry="3" fill="rgba(0,0,0,0.45)" />
-          {/* Pet Slime / Spirit Body */}
-          <ellipse cx="0" cy="10" rx="9" ry="8" fill="#38bdf8" />
-          <ellipse cx="0" cy="8" rx="8" ry="7" fill="#7dd3fc" />
-          {/* Pet Eyes */}
-          <circle cx="-3" cy="8" r="1.5" fill="#0c4a6e" />
-          <circle cx="3" cy="8" r="1.5" fill="#0c4a6e" />
-          <circle cx="-3.5" cy="7.5" r="0.5" fill="#ffffff" />
-          <circle cx="2.5" cy="7.5" r="0.5" fill="#ffffff" />
-          {/* Pet Blush */}
-          <ellipse cx="-5" cy="11" rx="1.5" ry="1" fill="#f43f5e" opacity="0.6" />
-          <ellipse cx="5" cy="11" rx="1.5" ry="1" fill="#f43f5e" opacity="0.6" />
-        </g>
       </svg>
+
+      {/* =================================================================== */}
+      {/* COMPANION PET: Cute Loyal Sprite bouncing right behind character    */}
+      {/* =================================================================== */}
+      {equippedPetId && (
+        <div
+          className="absolute z-10 pointer-events-none transition-transform duration-75"
+          style={{
+            bottom: '-4px',
+            right: facing === 'left' ? '-14px' : 'auto',
+            left: facing === 'right' ? '-14px' : facing === 'up' ? '-10px' : '-12px',
+            transform: `translateY(${-petBounce}px)`,
+          }}
+        >
+          <PetSprite
+            petId={equippedPetId}
+            size={Math.round(size * 0.55)}
+            isAnimated={isWalking}
+            facing={facing === 'left' ? 'left' : 'right'}
+          />
+        </div>
+      )}
     </div>
   );
 };
+

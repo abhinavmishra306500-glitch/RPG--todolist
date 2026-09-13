@@ -1,6 +1,7 @@
 import type { CharacterProfile } from '../types/character';
 import type { PlayerState, PlayerStats, LeagueTier, PlayerLeague } from '../types/progression';
 import { INITIAL_MAP_PROGRESSION } from './mapData';
+import { normalizePlayerPets } from './petData';
 
 export const MAX_PLAYER_LEVEL = 100;
 
@@ -30,6 +31,7 @@ export const getXpThresholdForLevel = getXPRequiredForLevel;
  * - Streak starts at 0
  * - League starts at Bronze
  * - Map starts at Level 11 in Silver Village
+ * - Pets start with Bunbun as starter companion
  */
 export const createInitialPlayerState = (character: CharacterProfile): PlayerState => {
   return {
@@ -59,6 +61,7 @@ export const createInitialPlayerState = (character: CharacterProfile): PlayerSta
     map: {
       ...INITIAL_MAP_PROGRESSION,
     },
+    pets: normalizePlayerPets(null),
   };
 };
 

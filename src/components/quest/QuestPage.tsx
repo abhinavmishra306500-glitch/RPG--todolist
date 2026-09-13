@@ -17,6 +17,10 @@ interface QuestPageProps {
   onDeleteQuest: (id: string) => void;
   onBackToStats: () => void;
   onOpenWorldMap?: () => void;
+  onOpenCreatureDex?: () => void;
+  onOpenPetShop?: () => void;
+  onOpenHome?: () => void;
+  onOpenShops?: (tab?: 'pets' | 'character' | 'home') => void;
 }
 
 type ActiveViewTab = 'board' | 'history';
@@ -30,6 +34,10 @@ export const QuestPage: React.FC<QuestPageProps> = ({
   onDeleteQuest,
   onBackToStats,
   onOpenWorldMap,
+  onOpenCreatureDex,
+  onOpenPetShop,
+  onOpenHome,
+  onOpenShops,
 }) => {
   const [activeTab, setActiveTab] = useState<ActiveViewTab>('board');
   const [questToDelete, setQuestToDelete] = useState<Quest | null>(null);
@@ -79,6 +87,19 @@ export const QuestPage: React.FC<QuestPageProps> = ({
 
         {/* Right Section: Action Controls (Fully preserved and shrink-proof) */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Home Navigation */}
+          {onOpenHome && (
+            <button
+              type="button"
+              onClick={onOpenHome}
+              className="px-2.5 sm:px-3 py-2 bg-[#122119] hover:bg-[#1a3327] border-2 border-emerald-500/60 hover:border-emerald-400 text-emerald-200 text-[10px] font-pixel flex items-center gap-1.5 shrink-0 transition-colors shadow-[2px_2px_0_0_#000]"
+              title="Go to My Home"
+            >
+              <span>🏠</span>
+              <span className="hidden sm:inline">Home</span>
+            </button>
+          )}
+
           {/* World Map Navigation */}
           {onOpenWorldMap && (
             <button
@@ -88,6 +109,32 @@ export const QuestPage: React.FC<QuestPageProps> = ({
             >
               <Compass size={13} className="text-cyan-300" />
               <span>Map</span>
+            </button>
+          )}
+
+          {/* CreatureDex Navigation */}
+          {onOpenCreatureDex && (
+            <button
+              type="button"
+              onClick={onOpenCreatureDex}
+              className="px-2 sm:px-2.5 py-2 bg-[#151226] hover:bg-[#221c3d] border-2 border-indigo-500/60 hover:border-indigo-400 text-indigo-200 text-[10px] font-pixel flex items-center gap-1 shrink-0 transition-colors shadow-[2px_2px_0_0_#000]"
+              title="Open CreatureDex"
+            >
+              <span>📖</span>
+              <span className="hidden sm:inline">Dex</span>
+            </button>
+          )}
+
+          {/* Shops Navigation */}
+          {(onOpenShops || onOpenPetShop) && (
+            <button
+              type="button"
+              onClick={() => (onOpenShops ? onOpenShops() : onOpenPetShop?.())}
+              className="px-2 sm:px-2.5 py-2 bg-[#211a12] hover:bg-[#33281c] border-2 border-amber-500/60 hover:border-amber-400 text-amber-200 text-[10px] font-pixel flex items-center gap-1 shrink-0 transition-colors shadow-[2px_2px_0_0_#000]"
+              title="Open Shops"
+            >
+              <span>🛍️</span>
+              <span className="hidden sm:inline">Shops</span>
             </button>
           )}
 
